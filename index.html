@@ -140,24 +140,18 @@
       } catch(e) { return INITIAL_DATA; }
     };
 
+    // DIRECT DISK SAVING VIA API SERVER (NO DOWNLOAD PROMPT NEEDED!)
     const saveStoredItems = (items) => {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
       } catch(e){}
-    };
 
-    // DOWNLOAD / EXPORT DATA.JSON HELPER
-    const autoExportDataJson = (items) => {
-      try {
-        if (!items || items.length === 0) return;
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(items, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "data.json");
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-      } catch(e){}
+      // Send direct write request to local server (if active)
+      fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(items)
+      }).catch(() => {});
     };
 
     // MATH RENDER COMPONENT
@@ -310,10 +304,11 @@
 
     // MAIN APP COMPONENT
     function App() {
-      const [items, setItems] = useState(getStoredItems);
+      const [items, setItems] = useState([]);
       const [activeTab, setActiveTab] = useState('catalog');
       const [isWizardOpen, setIsWizardOpen] = useState(false);
       const [editingItemId, setEditingItemId] = useState(null);
+      const [dataLoaded, setDataLoaded] = useState(false);
       
       // Catalog filters
       const [typeFilter, setTypeFilter] = useState('all');
@@ -343,23 +338,42 @@
       const [testChapters, setTestChapters] = useState([]);
       const [activeTestMode, setActiveTestMode] = useState(null);
 
-      // INITIAL LOAD: Read data.json if localStorage is empty
+      // LOAD DATA ON STARTUP: Server API first → data.json fallback → localStorage last resort
       useEffect(() => {
-        const stored = getStoredItems();
-        if (!stored || stored.length === 0) {
-          fetch('./data.json')
-            .then(res => res.json())
-            .then(fileItems => {
-              if (Array.isArray(fileItems) && fileItems.length > 0) {
-                setItems(fileItems);
-                saveStoredItems(fileItems);
-              }
-            })
-            .catch(() => {});
-        }
-      }, []);
+        const loadData = async () => {
+          // 1. Try server API (when running via node server.js)
+          try {
+            const res = await fetch('/api/data');
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+              setItems(data);
+              try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e){}
+              setDataLoaded(true);
+              return;
+            }
+          } catch(e) {}
 
-      useEffect(() => { saveStoredItems(items); }, [items]);
+          // 2. Try data.json file directly (when opened as file://)
+          try {
+            const res = await fetch('./data.json');
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+              setItems(data);
+              try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e){}
+              setDataLoaded(true);
+              return;
+            }
+          } catch(e) {}
+
+          // 3. Last resort: localStorage
+          const stored = getStoredItems();
+          if (stored.length > 0) {
+            setItems(stored);
+          }
+          setDataLoaded(true);
+        };
+        loadData();
+      }, []);
 
       const resetWizard = () => {
         setWStep(1); setWType('definition'); setWChapter('N');
@@ -518,7 +532,6 @@
 
         setItems(updated);
         saveStoredItems(updated);
-        autoExportDataJson(updated); // EXPORTS FILE ONLY WHEN YOU ACTUALLY CREATE/EDIT AN ITEM!
         setIsWizardOpen(false);
         resetWizard();
       };
@@ -550,7 +563,6 @@
           const updated = items.filter(i => i.id !== id);
           setItems(updated);
           saveStoredItems(updated);
-          autoExportDataJson(updated); // EXPORTS FILE ONLY ON DELETE
           if (selectedItem && selectedItem.id === id) setSelectedItem(null);
         }
       };

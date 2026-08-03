@@ -1,8 +1,13 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const PORT = 3000;
+const HOST = '127.0.0.1';
 const DATA_FILE = path.join(__dirname, 'data.json');
 const INDEX_FILE = path.join(__dirname, 'index.html');
 
@@ -40,7 +45,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // SAVE DIRECTLY TO DATA.JSON ON DISK (NO BROWSER DOWNLOAD NEEDED!)
+  // SAVE DIRECTLY TO DATA.JSON ON DISK (NO BROWSER DOWNLOAD POPUP NEEDED!)
   if (req.method === 'POST' && req.url === '/api/save') {
     let body = '';
     req.on('data', chunk => { body += chunk; });
@@ -63,8 +68,8 @@ const server = http.createServer((req, res) => {
   res.end('Non trovato');
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, HOST, () => {
   console.log(`\n==================================================`);
-  console.log(`🚀 Servizio Geometria attivo su: http://localhost:${PORT}`);
+  console.log(`🚀 Servizio Geometria attivo su: http://${HOST}:${PORT}`);
   console.log(`==================================================\n`);
 });

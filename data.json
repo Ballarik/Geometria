@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "id": "custom-1785776716644",
+    "code": "G1-D-3JXTNS",
+    "type": "definition",
+    "chapter": "G1",
+    "name": "semiretta",
+    "content": "Data una retta orientata e un suo punto O, chiamiamo semirette: \n- l'insieme formato da O e da tutti i punti che lo seguono; \n- l'insieme formato da O e da tutti i punti che lo precedono.",
+    "proof": "",
+    "notes": "",
+    "images": []
+  }
+]
