@@ -1,5 +1,106 @@
 [
   {
+    "id": "custom-1785779570200",
+    "code": "G1-D-54MTH7",
+    "type": "definition",
+    "chapter": "G1",
+    "name": "punto medio di un segmento",
+    "content": "Il punto medio di un segmento è il punto che lo divide in due segmenti congruenti.",
+    "proof": "",
+    "notes": "",
+    "images": []
+  },
+  {
+    "id": "custom-1785779408112",
+    "code": "G1-D-QCKG7B",
+    "type": "definition",
+    "chapter": "G1",
+    "name": "poligono",
+    "content": "Un poligono è l'insieme dei punti di una poligonale chiusa e non intrecciata e di tutti i suoi punti interni.",
+    "proof": "",
+    "notes": "Un poligono con tutti i lati congruenti è equilatero, con tutti gli angoli congruenti è equiangolo.\nUn poligono è regolare se è equilatero ed equiangolo.",
+    "images": []
+  },
+  {
+    "id": "custom-1785779347284",
+    "code": "G1-D-1R4JFV",
+    "type": "definition",
+    "chapter": "G1",
+    "name": "circonferenza",
+    "content": "Dati su un piano i punti C e P, la circonferenza di centro C e raggio CP è il luogo geometrico dei punti del piano che hanno da C distanza uguale a quella di P.",
+    "proof": "",
+    "notes": "",
+    "images": []
+  },
+  {
+    "id": "custom-1785778921900",
+    "code": "G1-D-G8ZKCD",
+    "type": "definition",
+    "chapter": "G1",
+    "name": "angolo",
+    "content": "Un angolo è ciascuna delle due parti di piano individuate da due semirette aventi la stessa origine, incluse le due semirette.\nLe due semirette sono i lati dell'angolo; il punto di origine in comune è il vertice dell'angolo.",
+    "proof": "",
+    "notes": "Quando due angoli hanno in comune soltanto il vertice e un lato, si dicono consecutivi.\nDue angoli consecutivi i cui lati non comuni appartengono alla stessa retta si\ndicono",
+    "images": []
+  },
+  {
+    "id": "custom-1785778702416",
+    "code": "G1-D-FS1NMO",
+    "type": "definition",
+    "chapter": "G1",
+    "name": "figure concave e convesse",
+    "content": "Una figura è convessa se due suoi punti qualsiasi sono estremi di un segmento tutto contenuto nella figura.\nIn caso contrario la figura è concava.",
+    "proof": "",
+    "notes": "",
+    "images": []
+  },
+  {
+    "id": "custom-1785777365350",
+    "code": "G1-D-F7VFQL",
+    "type": "definition",
+    "chapter": "G1",
+    "name": "semipiano",
+    "content": "Considerata una retta r di un piano, un semipiano di origine r è l'insieme dei punti di r e di uno dei due insiemi in cui il piano è diviso da r.",
+    "proof": "",
+    "notes": "",
+    "images": [
+      "https://www.mauitaui.org/uploads/1/5/0/1/15018318/published/2018-07-18-at-16-36-57.jpg?1531924844"
+    ]
+  },
+  {
+    "id": "custom-1785777180270",
+    "code": "G1-D-3VLBIX",
+    "type": "definition",
+    "chapter": "G1",
+    "name": "poligonale",
+    "content": "Una poligonale è una figura costituita da un insieme ordinato di segmenti in cui:\n- un segmento e il suo successivo sono sempre consecutivi ma non adiacenti;\n- ogni estremo dei segmenti appartiene al massimo a due di essi.",
+    "proof": "",
+    "notes": "Una poligonale è chiusa se l'ultimo estremo coincide con il primo. In caso contrario la poligonale è aperta. I segmenti di una poligonale si dicono anche lati della poligonale. Una poligonale è intrecciata se almeno due suoi lati (non consecutivi) si intersecano.",
+    "images": []
+  },
+  {
+    "id": "custom-1785777097621",
+    "code": "G1-D-2G945B",
+    "type": "definition",
+    "chapter": "G1",
+    "name": "segmenti consecutivi e adiacenti",
+    "content": "Due segmenti sono consecutivi se hanno in comune soltanto un estremo; sono adiacenti quando sono consecutivi e appartengono alla stessa retta.",
+    "proof": "",
+    "notes": "",
+    "images": []
+  },
+  {
+    "id": "custom-1785777058422",
+    "code": "G1-D-H0YMPR",
+    "type": "definition",
+    "chapter": "G1",
+    "name": "segmento",
+    "content": "Data una retta orientata e due suoi punti A e B, con A che precede B, chiamiamo segmento AB l'insieme dei punti della retta formato da A, da B e dai punti che seguono A e precedono B.",
+    "proof": "",
+    "notes": "",
+    "images": []
+  },
+  {
     "id": "custom-1785776716644",
     "code": "G1-D-3JXTNS",
     "type": "definition",
