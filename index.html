@@ -146,7 +146,7 @@
       } catch(e){}
     };
 
-    // AUTOMATIC DOWNLOAD / EXPORT DATA.JSON HELPER
+    // DOWNLOAD / EXPORT DATA.JSON HELPER
     const autoExportDataJson = (items) => {
       try {
         if (!items || items.length === 0) return;
@@ -343,13 +343,10 @@
       const [testChapters, setTestChapters] = useState([]);
       const [activeTestMode, setActiveTestMode] = useState(null);
 
-      // AUTOMATIC EXPORT OF ALREADY CREATED ITEMS ON FIRST LOAD
+      // INITIAL LOAD: Read data.json if localStorage is empty
       useEffect(() => {
         const stored = getStoredItems();
-        if (stored && stored.length > 0) {
-          // Sync existing items immediately to data.json
-          autoExportDataJson(stored);
-        } else {
+        if (!stored || stored.length === 0) {
           fetch('./data.json')
             .then(res => res.json())
             .then(fileItems => {
@@ -521,7 +518,7 @@
 
         setItems(updated);
         saveStoredItems(updated);
-        autoExportDataJson(updated);
+        autoExportDataJson(updated); // EXPORTS FILE ONLY WHEN YOU ACTUALLY CREATE/EDIT AN ITEM!
         setIsWizardOpen(false);
         resetWizard();
       };
@@ -553,7 +550,7 @@
           const updated = items.filter(i => i.id !== id);
           setItems(updated);
           saveStoredItems(updated);
-          autoExportDataJson(updated);
+          autoExportDataJson(updated); // EXPORTS FILE ONLY ON DELETE
           if (selectedItem && selectedItem.id === id) setSelectedItem(null);
         }
       };
