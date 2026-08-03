@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="it" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geometria (G1-G16)</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          animation: { 'fade-in': 'fadeIn 0.2s ease-out forwards' }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & KaTeX CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+
+  <!-- React 18, ReactDOM, Babel & KaTeX JS & Canvas Confetti -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <style>
+    body {
+      background-color: #ffffff;
+      background-image: 
+        linear-gradient(to right, rgba(56, 189, 248, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(56, 189, 248, 0.15) 1px, transparent 1px);
+      background-size: 28px 28px;
+      color: #0b192c;
+    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #e0f2fe; }
+    ::-webkit-scrollbar-thumb { background: #7dd3fc; border-radius: 4px; }
+    .katex { color: #0b192c !important; font-size: 1.05em; }
+    .katex-display { margin: 0.5em 0; overflow-x: auto; }
+  </style>
+</head>
+<body class="antialiased min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // CHAPTERS DATA: Clean short names G1, G2 ... G16
+    const CHAPTERS = Array.from({ length: 16 }, (_, i) => `G${i + 1}`);
+
+    // EMPTY INITIAL DATABASE
+    const INITIAL_DATA = [];
+
+    // STORAGE HELPERS
+    const getStoredItems = () => {
+      try {
+        const stored = localStorage.getItem('geometria_db_v3');
+        return stored ? JSON.parse(stored) : INITIAL_DATA;
+      } catch(e) { return INITIAL_DATA; }
+    };
+    const saveStoredItems = (items) => {
+      try { localStorage.setItem('geometria_db_v3', JSON.stringify(items)); } catch(e){}
+    };
+
+    // MATH RENDER COMPONENT
+    const MathRender = ({ content, className = '' }) => {
+      if (!content) return null;
+      const parseMath = (text) => {
+        const parts = [];
+        let lastIdx = 0;
+        const regex = /\$\$(.*?)\$\$|\$(.*?)\$/g;
+        let m;
+        while ((m = regex.exec(text)) !== null) {
+          if (m.index > lastIdx) parts.push({ type: 'text', value: text.substring(lastIdx, m.index) });
+          if (m[1] !== undefined) parts.push({ type: 'math', value: m[1], display: true });
+          else if (m[2] !== undefined) parts.push({ type: 'math', value: m[2], display: false });
+          lastIdx = regex.lastIndex;
+        }
+        if (lastIdx < text.length) parts.push({ type: 'text', value: text.substring(lastIdx) });
+        return parts;
+      };
+
+      return (
+        <div className={className}>
+          {parseMath(content).map((p, idx) => {
+            if (p.type === 'math') {
+              try {
+                const html = katex.renderToString(p.value, { displayMode: p.display, throwOnError: false });
+                return <span key={idx} dangerouslySetInnerHTML={{ __html: html }} />;
+              } catch(e) { return <code key={idx}>${p.value}$</code>; }
+            }
+            const formatted = p.value.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
+            return <span key={idx} dangerouslySetInnerHTML={{ __html: formatted }} />;
+          })}
+        </div>
+      );
+    };
+
+    // MAIN APP COMPONENT
+    function App() {
+      const [items, setItems] = useState(getStoredItems);
+      const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' | 'test'
+      const [isWizardOpen, setIsWizardOpen] = useState(false);
+      
+      // Catalog filters
+      const [typeFilter, setTypeFilter] = useState('all');
+      const [chapterFilter, setChapterFilter] = useState('all');
+      const [search, setSearch] = useState('');
+      const [selectedItem, setSelectedItem] = useState(null);
+
+      // Wizard State (4 Steps)
+      const [wStep, setWStep] = useState(1);
+      const [wType, setWType] = useState('definition');
+      const [wChapter, setWChapter] = useState('G1');
+      const [wName, setWName] = useState('');
+      const [wContent, setWContent] = useState('');
+      const [wProof, setWProof] = useState('');
+      const [wImages, setWImages] = useState([]);
+      const [wError, setWError] = useState('');
+
+      // Test State
+      const [testChapters, setTestChapters] = useState(CHAPTERS);
+      const [activeTestMode, setActiveTestMode] = useState(null);
+
+      useEffect(() => { saveStoredItems(items); }, [items]);
+
+      const filteredItems = useMemo(() => {
+        return items.filter(item => {
+          if (typeFilter === 'theorem' && item.type !== 'theorem') return false;
+          if (typeFilter === 'definition' && item.type !== 'definition') return false;
+          if (chapterFilter !== 'all' && item.chapter !== chapterFilter) return false;
+          if (search.trim()) {
+            const q = search.toLowerCase();
+            if (!item.name.toLowerCase().includes(q) && !item.content.toLowerCase().includes(q)) return false;
+          }
+          return true;
+        });
+      }, [items, typeFilter, chapterFilter, search]);
+
+      const resetWizard = () => {
+        setWStep(1); setWType('definition'); setWChapter('G1');
+        setWName(''); setWContent(''); setWProof(''); setWImages([]); setWError('');
+      };
+
+      const handleSaveWizard = () => {
+        if (!wName.trim()) { setWError('Il nome è obbligatorio.'); setWStep(2); return; }
+        if (!wContent.trim()) { setWError('Il testo/enunciato è obbligatorio.'); setWStep(3); return; }
+        if (wType === 'theorem' && !wProof.trim()) { setWError('La dimostrazione è obbligatoria per i teoremi.'); setWStep(4); return; }
+
+        const newItem = {
+          id: 'custom-' + Date.now(),
+          type: wType,
+          chapter: wChapter,
+          name: wName.trim(),
+          content: wContent.trim(),
+          proof: wType === 'theorem' ? wProof.trim() : '',
+          images: wImages
+        };
+
+        setItems([newItem, ...items]);
+        setIsWizardOpen(false);
+        resetWizard();
+      };
+
+      const handleDeleteItem = (id) => {
+        if (confirm('Eliminare questo elemento?')) {
+          setItems(items.filter(i => i.id !== id));
+        }
+      };
+
+      const handleExportJSON = () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(items, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "data.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+      };
+
+      const handleImportJSON = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const imported = JSON.parse(evt.target.result);
+            if (Array.isArray(imported)) {
+              setItems(imported);
+              alert('Dati importati con successo!');
+            }
+          } catch(err) {
+            alert('File JSON non valido.');
+          }
+        };
+        reader.readAsText(file);
+      };
+
+      return (
+        <div className="min-h-screen pb-12 text-[#0b192c]">
+          {/* HEADER / NAVBAR */}
+          <header className="bg-white/90 border-b border-sky-200 sticky top-0 z-40 backdrop-blur-md shadow-sm">
+            <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+              <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('catalog')}>
+                <div className="w-9 h-9 rounded-md bg-sky-600 flex items-center justify-center font-bold text-white shadow-sm">
+                  📐
+                </div>
+                <div>
+                  <h1 className="font-extrabold text-lg text-[#0b192c]">Geometria (G1-G16)</h1>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 bg-sky-50/80 p-1 rounded-md border border-sky-200">
+                  <button
+                    onClick={() => setActiveTab('catalog')}
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'catalog' ? 'bg-sky-600 text-white shadow-sm' : 'text-sky-900 hover:bg-sky-100'}`}
+                  >
+                    Consultazione
+                  </button>
+                  <button
+                    onClick={() => { resetWizard(); setIsWizardOpen(true); }}
+                    className="px-3 py-1.5 rounded-md text-xs font-bold bg-sky-600 text-white hover:bg-sky-700 shadow-sm"
+                  >
+                    + Nuovo Inserimento
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('test')}
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'test' ? 'bg-sky-600 text-white shadow-sm' : 'text-sky-900 hover:bg-sky-100'}`}
+                  >
+                    Area Test
+                  </button>
+                </div>
+
+                {/* EXPORT / IMPORT JSON BUTTONS */}
+                <button
+                  onClick={handleExportJSON}
+                  title="Esporta data.json per GitHub"
+                  className="px-2.5 py-1.5 bg-white border border-sky-300 text-sky-900 rounded-md text-xs font-bold hover:bg-sky-50"
+                >
+                  📥 Salva JSON
+                </button>
+                <label
+                  title="Carica file JSON"
+                  className="px-2.5 py-1.5 bg-white border border-sky-300 text-sky-900 rounded-md text-xs font-bold hover:bg-sky-50 cursor-pointer"
+                >
+                  📤 Carica
+                  <input type="file" accept=".json" onChange={handleImportJSON} className="hidden" />
+                </label>
+              </div>
+            </div>
+          </header>
+
+          {/* CATALOG TAB */}
+          {activeTab === 'catalog' && (
+            <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+              
+              {/* FILTERS PANEL */}
+              <div className="bg-sky-50/90 border border-sky-200 rounded-md p-4 shadow-sm space-y-3">
+                <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Cerca per nome o testo..."
+                    className="w-full sm:w-80 px-3.5 py-2 bg-white border border-sky-300 rounded-md text-xs text-[#0b192c] placeholder-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium"
+                  />
+
+                  {/* TYPE FILTERS */}
+                  <div className="flex items-center space-x-1 bg-white p-1 rounded-md border border-sky-200">
+                    <button onClick={() => setTypeFilter('all')} className={`px-3 py-1 rounded-md text-xs font-bold ${typeFilter === 'all' ? 'bg-sky-600 text-white' : 'text-sky-900'}`}>Tutti ({items.length})</button>
+                    <button onClick={() => setTypeFilter('theorem')} className={`px-3 py-1 rounded-md text-xs font-bold ${typeFilter === 'theorem' ? 'bg-sky-700 text-white' : 'text-sky-900'}`}>Teoremi ({items.filter(i=>i.type==='theorem').length})</button>
+                    <button onClick={() => setTypeFilter('definition')} className={`px-3 py-1 rounded-md text-xs font-bold ${typeFilter === 'definition' ? 'bg-sky-800 text-white' : 'text-sky-900'}`}>Definizioni ({items.filter(i=>i.type==='definition').length})</button>
+                  </div>
+                </div>
+
+                {/* CHAPTER FILTERS: ONLY G1, G2 ... G16 */}
+                <div className="pt-2 border-t border-sky-200">
+                  <span className="text-[11px] font-bold text-sky-900 uppercase tracking-wider block mb-1.5">Filtra per Capitolo:</span>
+                  <div className="flex flex-wrap gap-1">
+                    <button onClick={() => setChapterFilter('all')} className={`px-2.5 py-1 rounded-md text-xs font-bold ${chapterFilter === 'all' ? 'bg-sky-600 text-white' : 'bg-white border border-sky-200 text-sky-900 hover:bg-sky-100'}`}>Tutti</button>
+                    {CHAPTERS.map(ch => (
+                      <button key={ch} onClick={() => setChapterFilter(ch)} className={`px-2.5 py-1 rounded-md text-xs font-bold ${chapterFilter === ch ? 'bg-sky-600 text-white' : 'bg-white border border-sky-200 text-sky-900 hover:bg-sky-100'}`}>
+                        {ch}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* GRID ITEMS OR EMPTY STATE */}
+              {filteredItems.length === 0 ? (
+                <div className="bg-sky-50/60 border border-dashed border-sky-300 rounded-md p-10 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-md bg-sky-100 text-sky-600 flex items-center justify-center mx-auto text-xl font-bold">
+                    📝
+                  </div>
+                  <h3 className="text-base font-bold text-[#0b192c]">Nessun elemento presente</h3>
+                  <p className="text-sky-800 text-xs max-w-md mx-auto">
+                    Il database è vuoto. Clicca su <strong>"+ Nuovo Inserimento"</strong> per inserire i tuoi teoremi e definizioni.
+                  </p>
+                  <button
+                    onClick={() => { resetWizard(); setIsWizardOpen(true); }}
+                    className="px-4 py-2 bg-sky-600 text-white font-bold text-xs rounded-md shadow-sm hover:bg-sky-700"
+                  >
+                    + Aggiungi un elemento
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredItems.map(item => (
+                    <div key={item.id} className="bg-sky-50/70 border border-sky-200 hover:border-sky-400 rounded-md p-4 shadow-sm flex flex-col justify-between transition-all">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className={`px-2 py-0.5 rounded-md text-[11px] font-extrabold uppercase ${item.type === 'theorem' ? 'bg-sky-200 text-sky-900 border border-sky-300' : 'bg-blue-100 text-blue-900 border border-blue-200'}`}>
+                            {item.type === 'theorem' ? 'Teorema' : 'Definizione'}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md bg-white border border-sky-200 text-sky-900 text-xs font-mono font-bold">{item.chapter}</span>
+                        </div>
+                        <h3 className="text-base font-bold text-[#0b192c] mb-2">{item.name}</h3>
+                        <div className="text-[#0b192c] text-xs leading-relaxed line-clamp-4">
+                          <MathRender content={item.content} />
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-2.5 border-t border-sky-200 flex justify-between items-center">
+                        <button onClick={() => handleDeleteItem(item.id)} className="text-rose-600 hover:text-rose-800 text-xs font-medium">Elimina</button>
+                        <button onClick={() => setSelectedItem(item)} className="text-xs font-bold text-sky-900 bg-white border border-sky-300 px-2.5 py-1 rounded-md hover:bg-sky-100">Dettagli</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </main>
+          )}
+
+          {/* TEST TAB */}
+          {activeTab === 'test' && (
+            <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+              {!activeTestMode ? (
+                <div className="space-y-6">
+                  {/* CHAPTER SELECTOR */}
+                  <div className="bg-sky-50/90 border border-sky-200 rounded-md p-5 space-y-3 shadow-sm">
+                    <h3 className="font-bold text-[#0b192c] text-base">1. Seleziona i Capitoli per il Test ({testChapters.length}/16)</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-1.5">
+                      {CHAPTERS.map(ch => {
+                        const isSel = testChapters.includes(ch);
+                        return (
+                          <button
+                            key={ch}
+                            onClick={() => {
+                              if (isSel) {
+                                if (testChapters.length === 1) return alert('Devi selezionare almeno 1 capitolo!');
+                                setTestChapters(testChapters.filter(id => id !== ch));
+                              } else {
+                                setTestChapters([...testChapters, ch]);
+                              }
+                            }}
+                            className={`p-2 rounded-md border text-center font-bold text-xs ${isSel ? 'bg-sky-600 border-sky-600 text-white shadow-sm' : 'bg-white border-sky-200 text-sky-900 hover:bg-sky-100'}`}
+                          >
+                            {ch}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* TEST MODES */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div onClick={() => setActiveTestMode('matching')} className="bg-sky-50/70 border border-sky-200 hover:border-sky-400 rounded-md p-5 cursor-pointer space-y-1.5 shadow-sm">
+                      <h4 className="text-base font-bold text-[#0b192c]">1. Abbina l'Oggetto alla Definizione</h4>
+                      <p className="text-sky-800 text-xs">Collega i nomi degli oggetti alle rispettive definizioni in un gioco interattivo.</p>
+                    </div>
+                    <div onClick={() => setActiveTestMode('write_definition')} className="bg-sky-50/70 border border-sky-200 hover:border-sky-400 rounded-md p-5 cursor-pointer space-y-1.5 shadow-sm">
+                      <h4 className="text-base font-bold text-[#0b192c]">2. Scrivi la Definizione di un Oggetto</h4>
+                      <p className="text-sky-800 text-xs">Dato l'oggetto geometrico, scrivi la sua definizione esatta e verifica.</p>
+                    </div>
+                    <div onClick={() => setActiveTestMode('write_theorem')} className="bg-sky-50/70 border border-sky-200 hover:border-sky-400 rounded-md p-5 cursor-pointer space-y-1.5 shadow-sm">
+                      <h4 className="text-base font-bold text-[#0b192c]">3. Scrivi un Teorema</h4>
+                      <p className="text-sky-800 text-xs">Dato il nome del teorema, scrivi il suo enunciato teorico.</p>
+                    </div>
+                    <div onClick={() => setActiveTestMode('prove_theorem')} className="bg-sky-50/70 border border-sky-200 hover:border-sky-400 rounded-md p-5 cursor-pointer space-y-1.5 shadow-sm">
+                      <h4 className="text-base font-bold text-[#0b192c]">4. Dimostra un Teorema</h4>
+                      <p className="text-sky-800 text-xs">Sviluppa i passaggi della dimostrazione e confronta la tua prova con la versione ufficiale.</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <button onClick={() => setActiveTestMode(null)} className="mb-4 text-xs font-bold px-3 py-1.5 bg-white border border-sky-300 text-sky-900 rounded-md hover:bg-sky-100">← Torna alla Scelta Test</button>
+                  <TestRunner mode={activeTestMode} items={items.filter(i => testChapters.includes(i.chapter))} onFinish={() => setActiveTestMode(null)} />
+                </div>
+              )}
+            </main>
+          )}
+
+          {/* ITEM DETAIL MODAL */}
+          {selectedItem && (
+            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white border border-sky-200 rounded-md max-w-2xl w-full p-6 space-y-4 shadow-xl">
+                <div className="flex justify-between items-center border-b border-sky-100 pb-2">
+                  <span className="text-xs font-bold text-sky-900 uppercase">[{selectedItem.chapter}] {selectedItem.type}</span>
+                  <button onClick={() => setSelectedItem(null)} className="text-sky-900 font-bold text-lg">✕</button>
+                </div>
+                <h2 className="text-xl font-bold text-[#0b192c]">{selectedItem.name}</h2>
+                <div className="bg-sky-50/80 border border-sky-200 p-4 rounded-md">
+                  <h4 className="text-xs text-sky-900 font-bold uppercase mb-1">Enunciato / Testo</h4>
+                  <MathRender content={selectedItem.content} className="text-[#0b192c] text-sm" />
+                </div>
+                {selectedItem.proof && (
+                  <div className="bg-sky-100/50 border border-sky-300 p-4 rounded-md">
+                    <h4 className="text-xs text-sky-950 font-bold uppercase mb-1">Dimostrazione</h4>
+                    <MathRender content={selectedItem.proof} className="text-[#0b192c] text-sm" />
+                  </div>
+                )}
+                <div className="flex justify-end pt-2">
+                  <button onClick={() => setSelectedItem(null)} className="px-4 py-1.5 bg-sky-600 text-white rounded-md text-xs font-bold">Chiudi</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 4-STEP WIZARD MODAL */}
+          {isWizardOpen && (
+            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white border border-sky-300 rounded-md max-w-xl w-full p-6 space-y-5 shadow-2xl">
+                
+                {/* WIZARD HEADER */}
+                <div className="flex justify-between items-center border-b border-sky-200 pb-3">
+                  <div>
+                    <span className="text-xs font-extrabold text-sky-800 uppercase tracking-wider">PASSO {wStep} DI 4</span>
+                    <h3 className="text-lg font-bold text-[#0b192c]">Nuovo Inserimento nel Database</h3>
+                  </div>
+                  <button onClick={() => setIsWizardOpen(false)} className="text-sky-900 font-bold text-lg">✕</button>
+                </div>
+
+                {wError && <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-md text-xs font-medium">{wError}</div>}
+
+                {/* STEP 1: TYPE BUTTONS */}
+                {wStep === 1 && (
+                  <div className="space-y-3">
+                    <p className="text-[#0b192c] text-xs font-bold">1. Seleziona se desideri inserire un Teorema o una Definizione:</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setWType('definition')}
+                        className={`p-5 rounded-md border flex flex-col items-center space-y-2 transition-all ${wType === 'definition' ? 'border-sky-600 bg-sky-100 text-sky-950 font-bold shadow-sm' : 'border-sky-200 bg-sky-50/50 text-sky-800'}`}
+                      >
+                        <span className="text-2xl">📘</span>
+                        <span className="text-sm font-bold">Definizione</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setWType('theorem')}
+                        className={`p-5 rounded-md border flex flex-col items-center space-y-2 transition-all ${wType === 'theorem' ? 'border-sky-600 bg-sky-100 text-sky-950 font-bold shadow-sm' : 'border-sky-200 bg-sky-50/50 text-sky-800'}`}
+                      >
+                        <span className="text-2xl">📜</span>
+                        <span className="text-sm font-bold">Teorema</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 2: CHAPTER & NAME */}
+                {wStep === 2 && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-[#0b192c] mb-1">Seleziona Capitolo (G1-G16)</label>
+                      <select value={wChapter} onChange={e => setWChapter(e.target.value)} className="w-full bg-white border border-sky-300 rounded-md p-2.5 text-xs text-[#0b192c] font-medium">
+                        {CHAPTERS.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[#0b192c] mb-1">
+                        {wType === 'definition' ? 'Nome dell\'oggetto da definire' : 'Nome del teorema'}
+                      </label>
+                      <input
+                        type="text"
+                        value={wName}
+                        onChange={e => setWName(e.target.value)}
+                        placeholder={wType === 'definition' ? 'Es. Triangolo Isoscele' : 'Es. Teorema di Pitagora'}
+                        className="w-full bg-white border border-sky-300 rounded-md p-2.5 text-xs text-[#0b192c] font-medium"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 3: CONTENT */}
+                {wStep === 3 && (
+                  <div className="space-y-3">
+                    <label className="block text-xs font-bold text-[#0b192c]">
+                      {wType === 'definition' ? 'Testo della Definizione' : 'Enunciato del Teorema'}
+                    </label>
+                    <textarea
+                      value={wContent}
+                      onChange={e => setWContent(e.target.value)}
+                      rows={5}
+                      placeholder="Inserisci il testo qui (puoi usare formule tra $...$ come $a^2+b^2=c^2$)..."
+                      className="w-full bg-white border border-sky-300 rounded-md p-3 text-xs text-[#0b192c] font-medium"
+                    />
+                    {wContent && <div className="p-3 bg-sky-50 border border-sky-200 rounded-md text-xs"><MathRender content={wContent} /></div>}
+                  </div>
+                )}
+
+                {/* STEP 4: PROOF & EXTRAS */}
+                {wStep === 4 && (
+                  <div className="space-y-4">
+                    {wType === 'theorem' && (
+                      <div>
+                        <label className="block text-xs font-bold text-sky-900 mb-1">Dimostrazione del Teorema (Obbligatoria)</label>
+                        <textarea
+                          value={wProof}
+                          onChange={e => setWProof(e.target.value)}
+                          rows={4}
+                          placeholder="Scrivi i passaggi logici della dimostrazione..."
+                          className="w-full bg-white border border-sky-300 rounded-md p-3 text-xs text-[#0b192c] font-medium"
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-xs font-bold text-[#0b192c] mb-1">Aggiungi URL Immagine (Facoltativo)</label>
+                      <input
+                        type="url"
+                        placeholder="https://..."
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && e.target.value) {
+                            setWImages([...wImages, e.target.value]);
+                            e.target.value = '';
+                          }
+                        }}
+                        className="w-full bg-white border border-sky-300 rounded-md p-2.5 text-xs text-[#0b192c] font-medium"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* FOOTER WIZARD NAVIGATION */}
+                <div className="flex justify-between pt-3 border-t border-sky-200">
+                  {wStep > 1 ? (
+                    <button type="button" onClick={() => setWStep(wStep - 1)} className="px-4 py-1.5 bg-white border border-sky-300 text-sky-900 rounded-md text-xs font-bold hover:bg-sky-100">Indietro</button>
+                  ) : <div />}
+                  {wStep < 4 ? (
+                    <button type="button" onClick={() => setWStep(wStep + 1)} className="px-4 py-1.5 bg-sky-600 text-white font-bold rounded-md text-xs hover:bg-sky-700">Avanti →</button>
+                  ) : (
+                    <button type="button" onClick={handleSaveWizard} className="px-5 py-1.5 bg-sky-700 text-white font-bold rounded-md text-xs hover:bg-sky-800">Salva nel Database ✔</button>
+                  )}
+                </div>
+
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // TEST RUNNER COMPONENT
+    function TestRunner({ mode, items, onFinish }) {
+      const [selLeft, setSelLeft] = useState(null);
+      const [matched, setMatched] = useState([]);
+      const [userText, setUserText] = useState('');
+      const [revealed, setRevealed] = useState(false);
+      const [currentIdx, setCurrentIdx] = useState(0);
+
+      const activeList = useMemo(() => {
+        if (mode === 'write_definition') return items.filter(i => i.type === 'definition');
+        if (mode === 'write_theorem' || mode === 'prove_theorem') return items.filter(i => i.type === 'theorem');
+        return items.slice(0, 5);
+      }, [items, mode]);
+
+      const currentItem = activeList[currentIdx] || activeList[0];
+
+      if (!activeList || activeList.length === 0) {
+        return (
+          <div className="p-8 text-center bg-sky-50 border border-sky-200 rounded-md text-sky-900 font-medium text-xs">
+            Nessun contenuto presente nei capitoli selezionati per eseguire questo test. Inserisci prima dei teoremi/definizioni dal menù dedicato.
+          </div>
+        );
+      }
+
+      if (mode === 'matching') {
+        const rightList = [...activeList].sort(() => 0.5 - Math.random());
+        return (
+          <div className="bg-sky-50/90 border border-sky-200 rounded-md p-6 space-y-6 shadow-sm">
+            <h3 className="text-base font-bold text-[#0b192c]">Abbina l'Oggetto alla Definizione</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                {activeList.map(item => (
+                  <button
+                    key={item.id}
+                    disabled={matched.includes(item.id)}
+                    onClick={() => setSelLeft(item)}
+                    className={`w-full p-3 rounded-md border text-left font-bold text-xs ${matched.includes(item.id) ? 'bg-sky-200 border-sky-300 text-sky-950 opacity-50' : selLeft?.id === item.id ? 'bg-sky-600 border-sky-600 text-white' : 'bg-white border-sky-200 text-[#0b192c]'}`}
+                  >
+                    {item.name}
+                  </button>
+                ))}
+              </div>
+              <div className="space-y-2">
+                {rightList.map(item => (
+                  <button
+                    key={item.id}
+                    disabled={matched.includes(item.id)}
+                    onClick={() => {
+                      if (!selLeft) return;
+                      if (selLeft.id === item.id) {
+                        const newM = [...matched, item.id];
+                        setMatched(newM);
+                        setSelLeft(null);
+                        if (newM.length === activeList.length) confetti();
+                      }
+                    }}
+                    className={`w-full p-3 rounded-md border text-left text-xs ${matched.includes(item.id) ? 'bg-sky-200 border-sky-300 text-sky-950 opacity-50' : 'bg-white border-sky-200 text-[#0b192c]'}`}
+                  >
+                    <MathRender content={item.content} />
+                  </button>
+                ))}
+              </div>
+            </div>
+            {matched.length === activeList.length && (
+              <div className="text-center pt-4">
+                <p className="text-sky-900 font-bold text-sm mb-3">Tutti gli abbinamenti completati correttamente!</p>
+                <button onClick={onFinish} className="px-5 py-2 bg-sky-600 text-white font-bold text-xs rounded-md">Concludi Test</button>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      return (
+        <div className="bg-sky-50/90 border border-sky-200 rounded-md p-6 space-y-5 max-w-3xl mx-auto shadow-sm">
+          <div className="border-b border-sky-200 pb-2">
+            <span className="text-xs font-mono font-bold text-sky-900">Domanda {currentIdx + 1} di {activeList.length}</span>
+            <h3 className="text-xl font-bold text-[#0b192c] mt-0.5">{currentItem.name}</h3>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-[#0b192c]">
+              {mode === 'prove_theorem' ? 'Sviluppa i passaggi della dimostrazione:' : 'Scrivi la tua risposta a memoria:'}
+            </label>
+            <textarea
+              value={userText}
+              onChange={e => setUserText(e.target.value)}
+              rows={5}
+              disabled={revealed}
+              className="w-full bg-white border border-sky-300 rounded-md p-3 text-xs text-[#0b192c]"
+            />
+          </div>
+
+          {!revealed ? (
+            <div className="flex justify-end">
+              <button onClick={() => { setRevealed(true); confetti(); }} disabled={!userText.trim()} className="px-5 py-2 bg-sky-600 text-white font-bold rounded-md text-xs">Verifica Risposta</button>
+            </div>
+          ) : (
+            <div className="space-y-4 pt-4 border-t border-sky-200">
+              <div className="bg-white border border-sky-300 p-4 rounded-md">
+                <h4 className="text-xs text-sky-900 font-bold uppercase mb-1">
+                  {mode === 'prove_theorem' ? 'Dimostrazione Ufficiale:' : 'Risposta Ufficiale nel Database:'}
+                </h4>
+                <MathRender content={mode === 'prove_theorem' ? currentItem.proof : currentItem.content} className="text-[#0b192c] text-xs" />
+              </div>
+              <div className="flex justify-between pt-2">
+                {currentIdx < activeList.length - 1 ? (
+                  <button onClick={() => { setCurrentIdx(currentIdx + 1); setUserText(''); setRevealed(false); }} className="px-5 py-2 bg-sky-600 text-white font-bold rounded-md text-xs">Prossima Domanda →</button>
+                ) : (
+                  <button onClick={onFinish} className="px-5 py-2 bg-sky-700 text-white font-bold rounded-md text-xs">Completa Test ✔</button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
