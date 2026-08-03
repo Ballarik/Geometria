@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Geometria (G1-G16)</title>
+  <title>geometria</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -60,20 +60,39 @@
     // EMPTY INITIAL DATABASE
     const INITIAL_DATA = [];
 
-    // STORAGE HELPERS
+    // PERMANENT STORAGE KEY & DATA RECOVERY MIGRATION
+    const STORAGE_KEY = 'geometria_db_main';
+
     const getStoredItems = () => {
       try {
-        const stored = localStorage.getItem('geometria_db_v3');
-        return stored ? JSON.parse(stored) : INITIAL_DATA;
+        const mainData = localStorage.getItem(STORAGE_KEY);
+        if (mainData) return JSON.parse(mainData);
+
+        const oldKeys = ['geometria_db_v7', 'geometria_db_v6', 'geometria_db_v5', 'geometria_db_v4', 'geometria_db_v3', 'geometria_db_v2_empty', 'geometria_db_v1'];
+        for (const oldKey of oldKeys) {
+          const oldData = localStorage.getItem(oldKey);
+          if (oldData) {
+            const parsed = JSON.parse(oldData);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+              return parsed;
+            }
+          }
+        }
+        return INITIAL_DATA;
       } catch(e) { return INITIAL_DATA; }
     };
+
     const saveStoredItems = (items) => {
-      try { localStorage.setItem('geometria_db_v3', JSON.stringify(items)); } catch(e){}
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      } catch(e){}
     };
 
-    // MATH RENDER COMPONENT
+    // MATH RENDER COMPONENT (PRESERVES NEWLINES)
     const MathRender = ({ content, className = '' }) => {
       if (!content) return null;
+      
       const parseMath = (text) => {
         const parts = [];
         let lastIdx = 0;
@@ -90,7 +109,7 @@
       };
 
       return (
-        <div className={className}>
+        <div className={`whitespace-pre-wrap ${className}`}>
           {parseMath(content).map((p, idx) => {
             if (p.type === 'math') {
               try {
@@ -105,11 +124,58 @@
       );
     };
 
+    // EQUILATERAL TRIANGLE MENU BUTTON COMPONENT FOR MODIFICA & ELIMINA
+    const TriangleMenu = ({ onEdit, onDelete }) => {
+      const [open, setOpen] = useState(false);
+
+      return (
+        <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            title="Menu Opzioni"
+            className="w-7 h-7 bg-white border border-sky-300 hover:bg-sky-100 text-sky-700 rounded-md flex items-center justify-center transition-all shadow-sm"
+          >
+            {/* Equilateral Triangle SVG */}
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-sky-600">
+              <polygon points="12,3 22,20 2,20" />
+            </svg>
+          </button>
+
+          {open && (
+            <div className="absolute right-0 mt-1 w-32 bg-white border border-sky-300 rounded-md shadow-lg z-30 py-1 animate-fade-in">
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onEdit();
+                }}
+                className="w-full text-left px-3 py-1.5 text-xs font-bold text-sky-900 hover:bg-sky-50 flex items-center gap-2 border-b border-sky-100"
+              >
+                <span>✏️</span> Modifica
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onDelete();
+                }}
+                className="w-full text-left px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+              >
+                <span>🗑️</span> Elimina
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    };
+
     // MAIN APP COMPONENT
     function App() {
       const [items, setItems] = useState(getStoredItems);
       const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' | 'test'
       const [isWizardOpen, setIsWizardOpen] = useState(false);
+      const [editingItemId, setEditingItemId] = useState(null);
       
       // Catalog filters
       const [typeFilter, setTypeFilter] = useState('all');
@@ -124,12 +190,29 @@
       const [wName, setWName] = useState('');
       const [wContent, setWContent] = useState('');
       const [wProof, setWProof] = useState('');
+      const [wNotes, setWNotes] = useState('');
       const [wImages, setWImages] = useState([]);
       const [wError, setWError] = useState('');
 
       // Test State
-      const [testChapters, setTestChapters] = useState(CHAPTERS);
+      const [testChapters, setTestChapters] = useState([]);
       const [activeTestMode, setActiveTestMode] = useState(null);
+
+      // Automatically try to load data.json from disk if present
+      useEffect(() => {
+        fetch('./data.json')
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data) && data.length > 0) {
+              setItems(prev => {
+                // Merge data from file with local items if not empty
+                if (prev.length === 0) return data;
+                return prev;
+              });
+            }
+          })
+          .catch(() => {});
+      }, []);
 
       useEffect(() => { saveStoredItems(items); }, [items]);
 
@@ -148,7 +231,21 @@
 
       const resetWizard = () => {
         setWStep(1); setWType('definition'); setWChapter('G1');
-        setWName(''); setWContent(''); setWProof(''); setWImages([]); setWError('');
+        setWName(''); setWContent(''); setWProof(''); setWNotes(''); setWImages([]); setWError('');
+        setEditingItemId(null);
+      };
+
+      const handleOpenEdit = (item) => {
+        setEditingItemId(item.id);
+        setWType(item.type);
+        setWChapter(item.chapter);
+        setWName(item.name);
+        setWContent(item.content);
+        setWProof(item.proof || '');
+        setWNotes(item.notes || '');
+        setWImages(item.images || []);
+        setWStep(1);
+        setIsWizardOpen(true);
       };
 
       const handleSaveWizard = () => {
@@ -156,53 +253,44 @@
         if (!wContent.trim()) { setWError('Il testo/enunciato è obbligatorio.'); setWStep(3); return; }
         if (wType === 'theorem' && !wProof.trim()) { setWError('La dimostrazione è obbligatoria per i teoremi.'); setWStep(4); return; }
 
-        const newItem = {
-          id: 'custom-' + Date.now(),
-          type: wType,
-          chapter: wChapter,
-          name: wName.trim(),
-          content: wContent.trim(),
-          proof: wType === 'theorem' ? wProof.trim() : '',
-          images: wImages
-        };
+        let updated;
+        if (editingItemId) {
+          updated = items.map(item => item.id === editingItemId ? {
+            ...item,
+            type: wType,
+            chapter: wChapter,
+            name: wName.trim(),
+            content: wContent.trim(),
+            proof: wType === 'theorem' ? wProof.trim() : '',
+            notes: wNotes.trim(),
+            images: wImages
+          } : item);
+        } else {
+          const newItem = {
+            id: 'custom-' + Date.now(),
+            type: wType,
+            chapter: wChapter,
+            name: wName.trim(),
+            content: wContent.trim(),
+            proof: wType === 'theorem' ? wProof.trim() : '',
+            notes: wNotes.trim(),
+            images: wImages
+          };
+          updated = [newItem, ...items];
+        }
 
-        setItems([newItem, ...items]);
+        setItems(updated);
+        saveStoredItems(updated);
         setIsWizardOpen(false);
         resetWizard();
       };
 
       const handleDeleteItem = (id) => {
-        if (confirm('Eliminare questo elemento?')) {
-          setItems(items.filter(i => i.id !== id));
+        if (confirm('Eliminare questo elemento dal database?')) {
+          const updated = items.filter(i => i.id !== id);
+          setItems(updated);
+          saveStoredItems(updated);
         }
-      };
-
-      const handleExportJSON = () => {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(items, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "data.json");
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-      };
-
-      const handleImportJSON = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          try {
-            const imported = JSON.parse(evt.target.result);
-            if (Array.isArray(imported)) {
-              setItems(imported);
-              alert('Dati importati con successo!');
-            }
-          } catch(err) {
-            alert('File JSON non valido.');
-          }
-        };
-        reader.readAsText(file);
       };
 
       return (
@@ -210,52 +298,32 @@
           {/* HEADER / NAVBAR */}
           <header className="bg-white/90 border-b border-sky-200 sticky top-0 z-40 backdrop-blur-md shadow-sm">
             <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-              <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('catalog')}>
-                <div className="w-9 h-9 rounded-md bg-sky-600 flex items-center justify-center font-bold text-white shadow-sm">
-                  📐
-                </div>
-                <div>
-                  <h1 className="font-extrabold text-lg text-[#0b192c]">Geometria (G1-G16)</h1>
-                </div>
+              
+              {/* LOGO: Blue Pi symbol + lowercase "geometria" */}
+              <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setActiveTab('catalog')}>
+                <span className="text-2xl font-bold text-sky-500 font-serif leading-none select-none">π</span>
+                <h1 className="font-extrabold text-xl text-[#0b192c] tracking-tight">geometria</h1>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center space-x-1 bg-sky-50/80 p-1 rounded-md border border-sky-200">
-                  <button
-                    onClick={() => setActiveTab('catalog')}
-                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'catalog' ? 'bg-sky-600 text-white shadow-sm' : 'text-sky-900 hover:bg-sky-100'}`}
-                  >
-                    Consultazione
-                  </button>
-                  <button
-                    onClick={() => { resetWizard(); setIsWizardOpen(true); }}
-                    className="px-3 py-1.5 rounded-md text-xs font-bold bg-sky-600 text-white hover:bg-sky-700 shadow-sm"
-                  >
-                    + Nuovo Inserimento
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('test')}
-                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'test' ? 'bg-sky-600 text-white shadow-sm' : 'text-sky-900 hover:bg-sky-100'}`}
-                  >
-                    Area Test
-                  </button>
-                </div>
-
-                {/* EXPORT / IMPORT JSON BUTTONS */}
+              <div className="flex items-center space-x-1 bg-sky-50/80 p-1 rounded-md border border-sky-200">
                 <button
-                  onClick={handleExportJSON}
-                  title="Esporta data.json per GitHub"
-                  className="px-2.5 py-1.5 bg-white border border-sky-300 text-sky-900 rounded-md text-xs font-bold hover:bg-sky-50"
+                  onClick={() => setActiveTab('catalog')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'catalog' ? 'bg-sky-600 text-white shadow-sm' : 'text-sky-900 hover:bg-sky-100'}`}
                 >
-                  📥 Salva JSON
+                  Consultazione
                 </button>
-                <label
-                  title="Carica file JSON"
-                  className="px-2.5 py-1.5 bg-white border border-sky-300 text-sky-900 rounded-md text-xs font-bold hover:bg-sky-50 cursor-pointer"
+                <button
+                  onClick={() => { resetWizard(); setIsWizardOpen(true); }}
+                  className="px-3 py-1.5 rounded-md text-xs font-bold bg-sky-600 text-white hover:bg-sky-700 shadow-sm"
                 >
-                  📤 Carica
-                  <input type="file" accept=".json" onChange={handleImportJSON} className="hidden" />
-                </label>
+                  + Nuovo Inserimento
+                </button>
+                <button
+                  onClick={() => setActiveTab('test')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'test' ? 'bg-sky-600 text-white shadow-sm' : 'text-sky-900 hover:bg-sky-100'}`}
+                >
+                  Area Test
+                </button>
               </div>
             </div>
           </header>
@@ -265,7 +333,7 @@
             <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
               
               {/* FILTERS PANEL */}
-              <div className="bg-sky-50/90 border border-sky-200 rounded-md p-4 shadow-sm space-y-3">
+              <div className="bg-sky-50/90 border border-dashed border-sky-300 rounded-md p-4 shadow-sm space-y-3">
                 <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
                   <input
                     type="text"
@@ -283,8 +351,8 @@
                   </div>
                 </div>
 
-                {/* CHAPTER FILTERS: ONLY G1, G2 ... G16 */}
-                <div className="pt-2 border-t border-sky-200">
+                {/* CHAPTER FILTERS */}
+                <div className="pt-2 border-t border-dashed border-sky-300">
                   <span className="text-[11px] font-bold text-sky-900 uppercase tracking-wider block mb-1.5">Filtra per Capitolo:</span>
                   <div className="flex flex-wrap gap-1">
                     <button onClick={() => setChapterFilter('all')} className={`px-2.5 py-1 rounded-md text-xs font-bold ${chapterFilter === 'all' ? 'bg-sky-600 text-white' : 'bg-white border border-sky-200 text-sky-900 hover:bg-sky-100'}`}>Tutti</button>
@@ -299,7 +367,7 @@
 
               {/* GRID ITEMS OR EMPTY STATE */}
               {filteredItems.length === 0 ? (
-                <div className="bg-sky-50/60 border border-dashed border-sky-300 rounded-md p-10 text-center space-y-3">
+                <div className="bg-sky-50/60 border-2 border-dashed border-sky-300 rounded-md p-10 text-center space-y-3">
                   <div className="w-12 h-12 rounded-md bg-sky-100 text-sky-600 flex items-center justify-center mx-auto text-xl font-bold">
                     📝
                   </div>
@@ -317,22 +385,39 @@
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredItems.map(item => (
-                    <div key={item.id} className="bg-sky-50/70 border border-sky-200 hover:border-sky-400 rounded-md p-4 shadow-sm flex flex-col justify-between transition-all">
+                    <div
+                      key={item.id}
+                      onClick={() => setSelectedItem(item)}
+                      className="bg-sky-50/70 border-2 border-dashed border-sky-300 hover:border-sky-500 hover:bg-sky-100/60 cursor-pointer rounded-md p-4 shadow-sm flex flex-col justify-between transition-all group space-y-3"
+                    >
                       <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className={`px-2 py-0.5 rounded-md text-[11px] font-extrabold uppercase ${item.type === 'theorem' ? 'bg-sky-200 text-sky-900 border border-sky-300' : 'bg-blue-100 text-blue-900 border border-blue-200'}`}>
-                            {item.type === 'theorem' ? 'Teorema' : 'Definizione'}
-                          </span>
-                          <span className="px-2 py-0.5 rounded-md bg-white border border-sky-200 text-sky-900 text-xs font-mono font-bold">{item.chapter}</span>
+                        {/* TOP ROW: [CAPITOLO] [TIPO] ... [TRIANGOLO MENU] */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-2">
+                            <span className="px-2 py-0.5 rounded-md bg-white border border-sky-300 text-sky-900 text-xs font-mono font-extrabold shadow-2xs">
+                              {item.chapter}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-md text-[11px] font-extrabold uppercase ${item.type === 'theorem' ? 'bg-sky-200 text-sky-900 border border-sky-300' : 'bg-blue-100 text-blue-900 border border-blue-200'}`}>
+                              {item.type === 'theorem' ? 'TEOREMA' : 'DEFINIZIONE'}
+                            </span>
+                          </div>
+
+                          {/* TRIANGLE MENU BUTTON FOR ELIMINA AND MODIFICA */}
+                          <TriangleMenu
+                            onEdit={() => handleOpenEdit(item)}
+                            onDelete={() => handleDeleteItem(item.id)}
+                          />
                         </div>
-                        <h3 className="text-base font-bold text-[#0b192c] mb-2">{item.name}</h3>
-                        <div className="text-[#0b192c] text-xs leading-relaxed line-clamp-4">
+
+                        {/* SECOND ROW: NOME TUTTO MAIUSCOLO */}
+                        <h3 className="text-base font-black text-[#0b192c] group-hover:text-sky-700 transition-colors uppercase tracking-wide mb-2">
+                          {item.name}
+                        </h3>
+
+                        {/* THIRD ROW: IL TESTO */}
+                        <div className="text-[#0b192c] text-xs leading-relaxed line-clamp-5">
                           <MathRender content={item.content} />
                         </div>
-                      </div>
-                      <div className="mt-3 pt-2.5 border-t border-sky-200 flex justify-between items-center">
-                        <button onClick={() => handleDeleteItem(item.id)} className="text-rose-600 hover:text-rose-800 text-xs font-medium">Elimina</button>
-                        <button onClick={() => setSelectedItem(item)} className="text-xs font-bold text-sky-900 bg-white border border-sky-300 px-2.5 py-1 rounded-md hover:bg-sky-100">Dettagli</button>
                       </div>
                     </div>
                   ))}
@@ -347,8 +432,15 @@
               {!activeTestMode ? (
                 <div className="space-y-6">
                   {/* CHAPTER SELECTOR */}
-                  <div className="bg-sky-50/90 border border-sky-200 rounded-md p-5 space-y-3 shadow-sm">
-                    <h3 className="font-bold text-[#0b192c] text-base">1. Seleziona i Capitoli per il Test ({testChapters.length}/16)</h3>
+                  <div className="bg-sky-50/90 border border-dashed border-sky-300 rounded-md p-5 space-y-3 shadow-sm">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-bold text-[#0b192c] text-base">1. Seleziona i Capitoli per il Test ({testChapters.length}/16 selezionati)</h3>
+                      <div className="flex space-x-2">
+                        <button onClick={() => setTestChapters(CHAPTERS)} className="text-xs font-bold text-sky-700 hover:underline">Seleziona Tutti</button>
+                        <button onClick={() => setTestChapters([])} className="text-xs font-bold text-slate-500 hover:underline">Deseleziona Tutti</button>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-1.5">
                       {CHAPTERS.map(ch => {
                         const isSel = testChapters.includes(ch);
@@ -357,13 +449,12 @@
                             key={ch}
                             onClick={() => {
                               if (isSel) {
-                                if (testChapters.length === 1) return alert('Devi selezionare almeno 1 capitolo!');
                                 setTestChapters(testChapters.filter(id => id !== ch));
                               } else {
                                 setTestChapters([...testChapters, ch]);
                               }
                             }}
-                            className={`p-2 rounded-md border text-center font-bold text-xs ${isSel ? 'bg-sky-600 border-sky-600 text-white shadow-sm' : 'bg-white border-sky-200 text-sky-900 hover:bg-sky-100'}`}
+                            className={`p-2 rounded-md border text-center font-bold text-xs transition-all ${isSel ? 'bg-sky-600 border-sky-600 text-white shadow-sm' : 'bg-white border-sky-200 text-sky-900 hover:bg-sky-100'}`}
                           >
                             {ch}
                           </button>
@@ -374,19 +465,31 @@
 
                   {/* TEST MODES */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div onClick={() => setActiveTestMode('matching')} className="bg-sky-50/70 border border-sky-200 hover:border-sky-400 rounded-md p-5 cursor-pointer space-y-1.5 shadow-sm">
+                    <div onClick={() => {
+                      if (testChapters.length === 0) return alert('Seleziona almeno 1 capitolo per eseguire il test!');
+                      setActiveTestMode('matching');
+                    }} className="bg-sky-50/70 border border-dashed border-sky-300 hover:border-sky-500 rounded-md p-5 cursor-pointer space-y-1.5 shadow-sm">
                       <h4 className="text-base font-bold text-[#0b192c]">1. Abbina l'Oggetto alla Definizione</h4>
                       <p className="text-sky-800 text-xs">Collega i nomi degli oggetti alle rispettive definizioni in un gioco interattivo.</p>
                     </div>
-                    <div onClick={() => setActiveTestMode('write_definition')} className="bg-sky-50/70 border border-sky-200 hover:border-sky-400 rounded-md p-5 cursor-pointer space-y-1.5 shadow-sm">
+                    <div onClick={() => {
+                      if (testChapters.length === 0) return alert('Seleziona almeno 1 capitolo per eseguire il test!');
+                      setActiveTestMode('write_definition');
+                    }} className="bg-sky-50/70 border border-dashed border-sky-300 hover:border-sky-500 rounded-md p-5 cursor-pointer space-y-1.5 shadow-sm">
                       <h4 className="text-base font-bold text-[#0b192c]">2. Scrivi la Definizione di un Oggetto</h4>
                       <p className="text-sky-800 text-xs">Dato l'oggetto geometrico, scrivi la sua definizione esatta e verifica.</p>
                     </div>
-                    <div onClick={() => setActiveTestMode('write_theorem')} className="bg-sky-50/70 border border-sky-200 hover:border-sky-400 rounded-md p-5 cursor-pointer space-y-1.5 shadow-sm">
+                    <div onClick={() => {
+                      if (testChapters.length === 0) return alert('Seleziona almeno 1 capitolo per eseguire il test!');
+                      setActiveTestMode('write_theorem');
+                    }} className="bg-sky-50/70 border border-dashed border-sky-300 hover:border-sky-500 rounded-md p-5 cursor-pointer space-y-1.5 shadow-sm">
                       <h4 className="text-base font-bold text-[#0b192c]">3. Scrivi un Teorema</h4>
                       <p className="text-sky-800 text-xs">Dato il nome del teorema, scrivi il suo enunciato teorico.</p>
                     </div>
-                    <div onClick={() => setActiveTestMode('prove_theorem')} className="bg-sky-50/70 border border-sky-200 hover:border-sky-400 rounded-md p-5 cursor-pointer space-y-1.5 shadow-sm">
+                    <div onClick={() => {
+                      if (testChapters.length === 0) return alert('Seleziona almeno 1 capitolo per eseguire il test!');
+                      setActiveTestMode('prove_theorem');
+                    }} className="bg-sky-50/70 border border-dashed border-sky-300 hover:border-sky-500 rounded-md p-5 cursor-pointer space-y-1.5 shadow-sm">
                       <h4 className="text-base font-bold text-[#0b192c]">4. Dimostra un Teorema</h4>
                       <p className="text-sky-800 text-xs">Sviluppa i passaggi della dimostrazione e confronta la tua prova con la versione ufficiale.</p>
                     </div>
@@ -406,10 +509,13 @@
             <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
               <div className="bg-white border border-sky-200 rounded-md max-w-2xl w-full p-6 space-y-4 shadow-xl">
                 <div className="flex justify-between items-center border-b border-sky-100 pb-2">
-                  <span className="text-xs font-bold text-sky-900 uppercase">[{selectedItem.chapter}] {selectedItem.type}</span>
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2 py-0.5 rounded-md bg-[#0b192c] text-white text-xs font-mono font-bold">{selectedItem.chapter}</span>
+                    <span className="text-xs font-bold text-sky-900 uppercase">[{selectedItem.type}]</span>
+                  </div>
                   <button onClick={() => setSelectedItem(null)} className="text-sky-900 font-bold text-lg">✕</button>
                 </div>
-                <h2 className="text-xl font-bold text-[#0b192c]">{selectedItem.name}</h2>
+                <h2 className="text-xl font-black text-[#0b192c] uppercase">{selectedItem.name}</h2>
                 <div className="bg-sky-50/80 border border-sky-200 p-4 rounded-md">
                   <h4 className="text-xs text-sky-900 font-bold uppercase mb-1">Enunciato / Testo</h4>
                   <MathRender content={selectedItem.content} className="text-[#0b192c] text-sm" />
@@ -418,6 +524,12 @@
                   <div className="bg-sky-100/50 border border-sky-300 p-4 rounded-md">
                     <h4 className="text-xs text-sky-950 font-bold uppercase mb-1">Dimostrazione</h4>
                     <MathRender content={selectedItem.proof} className="text-[#0b192c] text-sm" />
+                  </div>
+                )}
+                {selectedItem.notes && (
+                  <div className="bg-amber-50 border border-amber-200 p-4 rounded-md">
+                    <h4 className="text-xs text-amber-900 font-bold uppercase mb-1">Note / Osservazioni</h4>
+                    <p className="text-slate-800 text-xs whitespace-pre-wrap">{selectedItem.notes}</p>
                   </div>
                 )}
                 <div className="flex justify-end pt-2">
@@ -436,7 +548,9 @@
                 <div className="flex justify-between items-center border-b border-sky-200 pb-3">
                   <div>
                     <span className="text-xs font-extrabold text-sky-800 uppercase tracking-wider">PASSO {wStep} DI 4</span>
-                    <h3 className="text-lg font-bold text-[#0b192c]">Nuovo Inserimento nel Database</h3>
+                    <h3 className="text-lg font-bold text-[#0b192c]">
+                      {editingItemId ? 'Modifica Elemento' : 'Nuovo Inserimento nel Database'}
+                    </h3>
                   </div>
                   <button onClick={() => setIsWizardOpen(false)} className="text-sky-900 font-bold text-lg">✕</button>
                 </div>
@@ -509,9 +623,9 @@
                   </div>
                 )}
 
-                {/* STEP 4: PROOF & EXTRAS */}
+                {/* STEP 4: PROOF, IMAGES & OPTIONAL NOTES */}
                 {wStep === 4 && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
                     {wType === 'theorem' && (
                       <div>
                         <label className="block text-xs font-bold text-sky-900 mb-1">Dimostrazione del Teorema (Obbligatoria)</label>
@@ -538,6 +652,18 @@
                         className="w-full bg-white border border-sky-300 rounded-md p-2.5 text-xs text-[#0b192c] font-medium"
                       />
                     </div>
+
+                    {/* OPTIONAL NOTES FIELD */}
+                    <div>
+                      <label className="block text-xs font-bold text-[#0b192c] mb-1">Note Facoltative / Osservazioni (Facoltativo)</label>
+                      <textarea
+                        value={wNotes}
+                        onChange={e => setWNotes(e.target.value)}
+                        rows={3}
+                        placeholder="Aggiungi eventuali note, corollari o osservazioni personali..."
+                        className="w-full bg-white border border-sky-300 rounded-md p-2.5 text-xs text-[#0b192c] font-medium"
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -549,7 +675,9 @@
                   {wStep < 4 ? (
                     <button type="button" onClick={() => setWStep(wStep + 1)} className="px-4 py-1.5 bg-sky-600 text-white font-bold rounded-md text-xs hover:bg-sky-700">Avanti →</button>
                   ) : (
-                    <button type="button" onClick={handleSaveWizard} className="px-5 py-1.5 bg-sky-700 text-white font-bold rounded-md text-xs hover:bg-sky-800">Salva nel Database ✔</button>
+                    <button type="button" onClick={handleSaveWizard} className="px-5 py-1.5 bg-sky-700 text-white font-bold rounded-md text-xs hover:bg-sky-800">
+                      {editingItemId ? 'Salva Modifiche ✔' : 'Salva nel Database ✔'}
+                    </button>
                   )}
                 </div>
 
