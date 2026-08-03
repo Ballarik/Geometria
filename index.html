@@ -52,12 +52,12 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect, useMemo } = React;
+    const { useState, useEffect, useMemo, useRef } = React;
 
     // CHAPTERS DATA: Clean short names G1, G2 ... G16
     const CHAPTERS = Array.from({ length: 16 }, (_, i) => `G${i + 1}`);
 
-    // CODE GENERATION HELPER: Schema [Capitolo]-[T/D]-[6 caratteri alfanumerici casuali in maiuscolo]
+    // CODE GENERATION HELPER
     const generateItemCode = (chapter, type) => {
       const typeChar = type === 'theorem' ? 'T' : 'D';
       const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -68,10 +68,46 @@
       return `${chapter}-${typeChar}-${randomCode}`;
     };
 
-    // EMPTY INITIAL DATABASE
-    const INITIAL_DATA = [];
+    // 9 TOP COMMON MATH SYMBOLS FOR GEOMETRY
+    const TOP_9_SYMBOLS = [
+      { label: '∠', code: '$\\angle$' },
+      { label: '≅', code: '$\\cong$' },
+      { label: '⊥', code: '$\\perp$' },
+      { label: '∥', code: '$\\parallel$' },
+      { label: 'α', code: '$\\alpha$' },
+      { label: 'β', code: '$\\beta$' },
+      { label: 'γ', code: '$\\gamma$' },
+      { label: 'π', code: '$\\pi$' },
+      { label: '△', code: '$\\triangle$' }
+    ];
 
-    // PERMANENT STORAGE KEY
+    // EXTENDED MATH SYMBOLS LIST FOR EXPANDED PALETTE
+    const EXTENDED_SYMBOLS = [
+      { label: 'θ', code: '$\\theta$' },
+      { label: 'σ', code: '$\\sigma$' },
+      { label: '≈', code: '$\\approx$' },
+      { label: '≠', code: '$\\neq$' },
+      { label: '≤', code: '$\\le$' },
+      { label: '≥', code: '$\\ge$' },
+      { label: '→', code: '$\\rightarrow$' },
+      { label: '↔', code: '$\\leftrightarrow$' },
+      { label: '·', code: '$\\cdot$' },
+      { label: '×', code: '$\\times$' },
+      { label: '÷', code: '$\\div$' },
+      { label: '∈', code: '$\\in$' },
+      { label: '∉', code: '$\\notin$' },
+      { label: '∀', code: '$\\forall$' },
+      { label: '∃', code: '$\\exists$' },
+      { label: '∞', code: '$\\infty$' },
+      { label: '√x', code: '$\\sqrt{x}$' },
+      { label: 'a/b', code: '$\\frac{a}{b}$' },
+      { label: 'x²', code: '$x^2$' },
+      { label: 'xₙ', code: '$x_n$' },
+      { label: 'AB̄', code: '$\\overline{AB}$' }
+    ];
+
+    // STORAGE & MIGRATION LOGIC
+    const INITIAL_DATA = [];
     const STORAGE_KEY = 'geometria_db_main';
 
     const getStoredItems = () => {
@@ -110,7 +146,7 @@
       } catch(e){}
     };
 
-    // MATH RENDER COMPONENT (PRESERVES NEWLINES)
+    // MATH RENDER COMPONENT
     const MathRender = ({ content, className = '' }) => {
       if (!content) return null;
       
@@ -145,7 +181,75 @@
       );
     };
 
-    // EQUILATERAL TRIANGLE MENU BUTTON COMPONENT FOR MODIFICA & ELIMINA
+    // TOOLBAR MATH SYMBOLS INSERTION COMPONENT
+    const MathSymbolsToolbar = ({ textareaRef, value, setValue }) => {
+      const [showExtended, setShowExtended] = useState(false);
+
+      const handleInsert = (symbolCode) => {
+        if (!textareaRef.current) {
+          setValue(value + symbolCode);
+          return;
+        }
+        const el = textareaRef.current;
+        const start = el.selectionStart || 0;
+        const end = el.selectionEnd || 0;
+        const newValue = value.substring(0, start) + symbolCode + value.substring(end);
+        setValue(newValue);
+
+        setTimeout(() => {
+          el.focus();
+          const newPos = start + symbolCode.length;
+          el.setSelectionRange(newPos, newPos);
+        }, 10);
+      };
+
+      return (
+        <div className="space-y-1.5 mb-2">
+          <div className="flex flex-wrap items-center gap-1 bg-sky-100/70 p-1.5 rounded-md border border-sky-300">
+            <span className="text-[10px] font-bold text-sky-900 uppercase tracking-wider mr-1">Inserisci Simbolo:</span>
+            {TOP_9_SYMBOLS.map((s, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleInsert(s.code)}
+                title={`Inserisci ${s.code}`}
+                className="w-7 h-7 bg-white hover:bg-sky-600 hover:text-white border border-sky-300 rounded text-xs font-bold text-[#0b192c] transition-all flex items-center justify-center shadow-2xs active:scale-95"
+              >
+                {s.label}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => setShowExtended(!showExtended)}
+              className="px-2 py-1 bg-sky-700 hover:bg-sky-800 text-white rounded text-[11px] font-bold transition-all ml-auto flex items-center gap-1 shadow-2xs"
+            >
+              <span>{showExtended ? 'Chiudi' : 'Altri Simboli'}</span>
+              <span>{showExtended ? '▲' : '▼'}</span>
+            </button>
+          </div>
+
+          {/* EXPANDED SYMBOLS POPUP PANEL */}
+          {showExtended && (
+            <div className="p-2 bg-white border border-sky-300 rounded-md shadow-md grid grid-cols-7 gap-1 animate-fade-in">
+              {EXTENDED_SYMBOLS.map((s, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleInsert(s.code)}
+                  title={`Inserisci ${s.code}`}
+                  className="py-1 px-1.5 bg-sky-50 hover:bg-sky-600 hover:text-white border border-sky-200 rounded text-xs font-bold text-sky-950 transition-all text-center"
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    // EQUILATERAL TRIANGLE MENU BUTTON COMPONENT (OUTLINED TRIANGLE ICON)
     const TriangleMenu = ({ onEdit, onDelete }) => {
       const [open, setOpen] = useState(false);
 
@@ -157,8 +261,8 @@
             title="Menu Opzioni"
             className="w-7 h-7 bg-white border border-sky-300 hover:bg-sky-100 text-sky-700 rounded-md flex items-center justify-center transition-all shadow-sm"
           >
-            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-sky-600">
-              <polygon points="12,3 22,20 2,20" />
+            <svg viewBox="0 0 24 24" className="w-4 h-4">
+              <polygon points="12,4 21,19 3,19" fill="none" stroke="#0284c7" strokeWidth="2.2" strokeLinejoin="round" />
             </svg>
           </button>
 
@@ -193,7 +297,7 @@
     // MAIN APP COMPONENT
     function App() {
       const [items, setItems] = useState(getStoredItems);
-      const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' | 'test'
+      const [activeTab, setActiveTab] = useState('catalog');
       const [isWizardOpen, setIsWizardOpen] = useState(false);
       const [editingItemId, setEditingItemId] = useState(null);
       
@@ -203,16 +307,23 @@
       const [search, setSearch] = useState('');
       const [selectedItem, setSelectedItem] = useState(null);
 
-      // Wizard State (4 Steps)
+      // Wizard State (4 Steps) - DEFAULT CHAPTER IS 'N'
       const [wStep, setWStep] = useState(1);
       const [wType, setWType] = useState('definition');
-      const [wChapter, setWChapter] = useState('G1');
+      const [wChapter, setWChapter] = useState('N');
       const [wName, setWName] = useState('');
       const [wContent, setWContent] = useState('');
       const [wProof, setWProof] = useState('');
       const [wNotes, setWNotes] = useState('');
       const [wImages, setWImages] = useState([]);
+      
+      // VALIDATION ERRORS
       const [wError, setWError] = useState('');
+      const [invalidFields, setInvalidFields] = useState({});
+
+      // REFS FOR TEXTAREAS
+      const wContentRef = useRef(null);
+      const wProofRef = useRef(null);
 
       // Test State
       const [testChapters, setTestChapters] = useState([]);
@@ -221,12 +332,13 @@
       useEffect(() => { saveStoredItems(items); }, [items]);
 
       const resetWizard = () => {
-        setWStep(1); setWType('definition'); setWChapter('G1');
-        setWName(''); setWContent(''); setWProof(''); setWNotes(''); setWImages([]); setWError('');
+        setWStep(1); setWType('definition'); setWChapter('N');
+        setWName(''); setWContent(''); setWProof(''); setWNotes(''); setWImages([]); 
+        setWError(''); setInvalidFields({});
         setEditingItemId(null);
       };
 
-      // KEYBOARD SHORTCUT: Press 'N' or 'n' when on Home (activeTab === 'catalog')
+      // KEYBOARD SHORTCUT: Press 'N' or 'n' when on Home
       useEffect(() => {
         const handleKeyDown = (e) => {
           if ((e.key === 'n' || e.key === 'N') && activeTab === 'catalog') {
@@ -266,20 +378,79 @@
       const handleOpenEdit = (item) => {
         setEditingItemId(item.id);
         setWType(item.type);
-        setWChapter(item.chapter);
+        setWChapter(item.chapter || 'N');
         setWName(item.name);
         setWContent(item.content);
         setWProof(item.proof || '');
         setWNotes(item.notes || '');
         setWImages(item.images || []);
+        setWError(''); setInvalidFields({});
         setWStep(1);
         setIsWizardOpen(true);
       };
 
+      const validateAndNextStep = () => {
+        setWError('');
+        const newInvalid = {};
+
+        if (wStep === 1) {
+          if (!wType) {
+            setWError('Seleziona il tipo (Teorema o Definizione).');
+            return;
+          }
+          setInvalidFields({});
+          setWStep(2);
+        } else if (wStep === 2) {
+          if (wChapter === 'N') newInvalid.chapter = true;
+          if (!wName.trim()) newInvalid.name = true;
+
+          if (Object.keys(newInvalid).length > 0) {
+            setInvalidFields(newInvalid);
+            if (newInvalid.chapter && newInvalid.name) {
+              setWError('Seleziona un capitolo valido (G1-G16) e inserisci il nome.');
+            } else if (newInvalid.chapter) {
+              setWError('Seleziona un capitolo valido da G1 a G16.');
+            } else {
+              setWError('Inserisci il nome dell\'oggetto prima di proseguire.');
+            }
+            return;
+          }
+          setInvalidFields({});
+          setWStep(3);
+        } else if (wStep === 3) {
+          if (!wContent.trim()) {
+            setInvalidFields({ content: true });
+            setWError('Inserisci il testo/enunciato prima di proseguire.');
+            return;
+          }
+          setInvalidFields({});
+          setWStep(4);
+        }
+      };
+
       const handleSaveWizard = () => {
-        if (!wName.trim()) { setWError('Il nome è obbligatorio.'); setWStep(2); return; }
-        if (!wContent.trim()) { setWError('Il testo/enunciato è obbligatorio.'); setWStep(3); return; }
-        if (wType === 'theorem' && !wProof.trim()) { setWError('La dimostrazione è obbligatoria per i teoremi.'); setWStep(4); return; }
+        setWError('');
+        const newInvalid = {};
+
+        if (wChapter === 'N') newInvalid.chapter = true;
+        if (!wName.trim()) newInvalid.name = true;
+        if (!wContent.trim()) newInvalid.content = true;
+        if (wType === 'theorem' && !wProof.trim()) newInvalid.proof = true;
+
+        if (Object.keys(newInvalid).length > 0) {
+          setInvalidFields(newInvalid);
+          if (newInvalid.chapter || newInvalid.name) {
+            setWError('Compila tutti i campi obbligatori contrassegnati.');
+            setWStep(2);
+          } else if (newInvalid.content) {
+            setWError('Inserisci il testo/enunciato.');
+            setWStep(3);
+          } else if (newInvalid.proof) {
+            setWError('La dimostrazione è obbligatoria per i teoremi.');
+            setWStep(4);
+          }
+          return;
+        }
 
         let updated;
         if (editingItemId) {
@@ -326,6 +497,7 @@
           const updated = items.filter(i => i.id !== id);
           setItems(updated);
           saveStoredItems(updated);
+          if (selectedItem && selectedItem.id === id) setSelectedItem(null);
         }
       };
 
@@ -335,7 +507,7 @@
           <header className="bg-white/90 border-b border-sky-200 sticky top-0 z-40 backdrop-blur-md shadow-sm">
             <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
               
-              {/* LOGO: Blue Pi symbol + lowercase "geometria" */}
+              {/* LOGO */}
               <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setActiveTab('catalog')}>
                 <span className="text-2xl font-bold text-sky-500 font-serif leading-none select-none">π</span>
                 <h1 className="font-extrabold text-xl text-[#0b192c] tracking-tight">geometria</h1>
@@ -431,7 +603,7 @@
                         className="bg-sky-50/70 border-2 border-dashed border-sky-300 hover:border-sky-500 hover:bg-sky-100/60 cursor-pointer rounded-md p-4 shadow-sm flex flex-col justify-between transition-all group space-y-3"
                       >
                         <div>
-                          {/* TOP ROW: [CAPITOLO] [TIPO] [CODICE UNIVOCO] ... [TRIANGOLO MENU] */}
+                          {/* TOP ROW */}
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
                               <span className="px-2 py-0.5 rounded-md bg-white border border-sky-300 text-sky-900 text-xs font-mono font-extrabold shadow-2xs">
@@ -445,19 +617,18 @@
                               </span>
                             </div>
 
-                            {/* TRIANGLE MENU BUTTON FOR ELIMINA AND MODIFICA */}
                             <TriangleMenu
                               onEdit={() => handleOpenEdit(item)}
                               onDelete={() => handleDeleteItem(item.id)}
                             />
                           </div>
 
-                          {/* SECOND ROW: NOME TUTTO MAIUSCOLO */}
+                          {/* SECOND ROW */}
                           <h3 className="text-base font-black text-[#0b192c] group-hover:text-sky-700 transition-colors uppercase tracking-wide mb-2">
                             {item.name}
                           </h3>
 
-                          {/* THIRD ROW: IL TESTO */}
+                          {/* THIRD ROW */}
                           <div className="text-[#0b192c] text-xs leading-relaxed line-clamp-5">
                             <MathRender content={item.content} />
                           </div>
@@ -548,18 +719,33 @@
             </main>
           )}
 
-          {/* ITEM DETAIL MODAL */}
+          {/* ITEM DETAIL MODAL (CLOSES ON BACKDROP CLICK, TRIANGLE MENU REPLACES X) */}
           {selectedItem && (
-            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white border border-sky-200 rounded-md max-w-2xl w-full p-6 space-y-4 shadow-xl">
+            <div
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => setSelectedItem(null)} // CLICKING BACKDROP CLOSES MODAL
+            >
+              <div
+                className="bg-white border border-sky-200 rounded-md max-w-2xl w-full p-6 space-y-4 shadow-xl"
+                onClick={(e) => e.stopPropagation()} // PREVENT MODAL CONTENT CLICKS FROM CLOSING
+              >
                 <div className="flex justify-between items-center border-b border-sky-100 pb-2">
                   <div className="flex items-center space-x-2">
                     <span className="px-2 py-0.5 rounded-md bg-[#0b192c] text-white text-xs font-mono font-bold">{selectedItem.chapter}</span>
                     <span className="text-xs font-bold text-sky-900 uppercase">[{selectedItem.type}]</span>
                     <span className="px-2 py-0.5 rounded-md bg-sky-900 text-white text-xs font-mono font-bold">{selectedItem.code}</span>
                   </div>
-                  <button onClick={() => setSelectedItem(null)} className="text-sky-900 font-bold text-lg">✕</button>
+
+                  {/* TRIANGLE MENU REPLACES THE X BUTTON */}
+                  <TriangleMenu
+                    onEdit={() => {
+                      handleOpenEdit(selectedItem);
+                      setSelectedItem(null);
+                    }}
+                    onDelete={() => handleDeleteItem(selectedItem.id)}
+                  />
                 </div>
+
                 <h2 className="text-xl font-black text-[#0b192c] uppercase">{selectedItem.name}</h2>
                 <div className="bg-sky-50/80 border border-sky-200 p-4 rounded-md">
                   <h4 className="text-xs text-sky-900 font-bold uppercase mb-1">Enunciato / Testo</h4>
@@ -600,7 +786,13 @@
                   <button onClick={() => setIsWizardOpen(false)} className="text-sky-900 font-bold text-lg">✕</button>
                 </div>
 
-                {wError && <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-md text-xs font-medium">{wError}</div>}
+                {/* SHOW ERROR ALERT ONLY IF PROCEED/SAVE IS CLICKED WITHOUT FILLING */}
+                {wError && (
+                  <div className="p-3 bg-rose-50 border border-rose-300 text-rose-800 rounded-md text-xs font-bold animate-fade-in flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span>{wError}</span>
+                  </div>
+                )}
 
                 {/* STEP 1: TYPE BUTTONS */}
                 {wStep === 1 && (
@@ -609,7 +801,7 @@
                     <div className="grid grid-cols-2 gap-4">
                       <button
                         type="button"
-                        onClick={() => setWType('definition')}
+                        onClick={() => { setWType('definition'); setWError(''); setInvalidFields({}); }}
                         className={`p-5 rounded-md border flex flex-col items-center space-y-2 transition-all ${wType === 'definition' ? 'border-sky-600 bg-sky-100 text-sky-950 font-bold shadow-sm' : 'border-sky-200 bg-sky-50/50 text-sky-800'}`}
                       >
                         <span className="text-2xl">📘</span>
@@ -617,7 +809,7 @@
                       </button>
                       <button
                         type="button"
-                        onClick={() => setWType('theorem')}
+                        onClick={() => { setWType('theorem'); setWError(''); setInvalidFields({}); }}
                         className={`p-5 rounded-md border flex flex-col items-center space-y-2 transition-all ${wType === 'theorem' ? 'border-sky-600 bg-sky-100 text-sky-950 font-bold shadow-sm' : 'border-sky-200 bg-sky-50/50 text-sky-800'}`}
                       >
                         <span className="text-2xl">📜</span>
@@ -631,8 +823,21 @@
                 {wStep === 2 && (
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-xs font-bold text-[#0b192c] mb-1">Seleziona Capitolo (G1-G16)</label>
-                      <select value={wChapter} onChange={e => setWChapter(e.target.value)} className="w-full bg-white border border-sky-300 rounded-md p-2.5 text-xs text-[#0b192c] font-medium">
+                      <label className="block text-xs font-bold text-[#0b192c] mb-1">
+                        Seleziona Capitolo
+                      </label>
+                      <select
+                        value={wChapter}
+                        onChange={e => {
+                          setWChapter(e.target.value);
+                          if (e.target.value !== 'N') {
+                            setWError('');
+                            setInvalidFields(prev => ({ ...prev, chapter: false }));
+                          }
+                        }}
+                        className={`w-full bg-white border rounded-md p-2.5 text-xs font-medium transition-all ${invalidFields.chapter ? 'border-rose-500 bg-rose-50/30 text-rose-900 ring-1 ring-rose-500' : 'border-sky-300 text-[#0b192c]'}`}
+                      >
+                        <option value="N">N (Seleziona il capitolo...)</option>
                         {CHAPTERS.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
@@ -643,43 +848,81 @@
                       <input
                         type="text"
                         value={wName}
-                        onChange={e => setWName(e.target.value)}
+                        onChange={e => {
+                          setWName(e.target.value);
+                          if (e.target.value.trim()) {
+                            setWError('');
+                            setInvalidFields(prev => ({ ...prev, name: false }));
+                          }
+                        }}
                         placeholder={wType === 'definition' ? 'Es. Triangolo Isoscele' : 'Es. Teorema di Pitagora'}
-                        className="w-full bg-white border border-sky-300 rounded-md p-2.5 text-xs text-[#0b192c] font-medium"
+                        className={`w-full bg-white border rounded-md p-2.5 text-xs font-medium transition-all ${invalidFields.name ? 'border-rose-500 bg-rose-50/30 text-rose-900 ring-1 ring-rose-500' : 'border-sky-300 text-[#0b192c]'}`}
                       />
                     </div>
                   </div>
                 )}
 
-                {/* STEP 3: CONTENT */}
+                {/* STEP 3: CONTENT WITH MATH SYMBOLS TOOLBAR */}
                 {wStep === 3 && (
                   <div className="space-y-3">
                     <label className="block text-xs font-bold text-[#0b192c]">
                       {wType === 'definition' ? 'Testo della Definizione' : 'Enunciato del Teorema'}
                     </label>
-                    <textarea
+
+                    {/* TOOLBAR SYMBOLS */}
+                    <MathSymbolsToolbar
+                      textareaRef={wContentRef}
                       value={wContent}
-                      onChange={e => setWContent(e.target.value)}
+                      setValue={(val) => {
+                        setWContent(val);
+                        if (val.trim()) { setWError(''); setInvalidFields(prev => ({ ...prev, content: false })); }
+                      }}
+                    />
+
+                    <textarea
+                      ref={wContentRef}
+                      value={wContent}
+                      onChange={e => {
+                        setWContent(e.target.value);
+                        if (e.target.value.trim()) { setWError(''); setInvalidFields(prev => ({ ...prev, content: false })); }
+                      }}
                       rows={5}
-                      placeholder="Inserisci il testo qui (puoi usare formule tra $...$ come $a^2+b^2=c^2$)..."
-                      className="w-full bg-white border border-sky-300 rounded-md p-3 text-xs text-[#0b192c] font-medium"
+                      placeholder="Inserisci il testo qui..."
+                      className={`w-full bg-white border rounded-md p-3 text-xs font-medium transition-all ${invalidFields.content ? 'border-rose-500 bg-rose-50/30 ring-1 ring-rose-500' : 'border-sky-300 text-[#0b192c]'}`}
                     />
                     {wContent && <div className="p-3 bg-sky-50 border border-sky-200 rounded-md text-xs"><MathRender content={wContent} /></div>}
                   </div>
                 )}
 
-                {/* STEP 4: PROOF, IMAGES & OPTIONAL NOTES */}
+                {/* STEP 4: PROOF WITH MATH SYMBOLS TOOLBAR, IMAGES & OPTIONAL NOTES */}
                 {wStep === 4 && (
                   <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
                     {wType === 'theorem' && (
                       <div>
-                        <label className="block text-xs font-bold text-sky-900 mb-1">Dimostrazione del Teorema (Obbligatoria)</label>
-                        <textarea
+                        <label className="block text-xs font-bold text-sky-900 mb-1">
+                          Dimostrazione del Teorema
+                        </label>
+                        
+                        {/* TOOLBAR SYMBOLS FOR PROOF */}
+                        <MathSymbolsToolbar
+                          textareaRef={wProofRef}
                           value={wProof}
-                          onChange={e => setWProof(e.target.value)}
+                          setValue={(val) => {
+                            setWProof(val);
+                            if (val.trim()) { setWError(''); setInvalidFields(prev => ({ ...prev, proof: false })); }
+                          }}
+                        />
+
+                        <textarea
+                          ref={wProofRef}
+                          value={wProof}
+                          onChange={e => {
+                            setWProof(e.target.value);
+                            if (e.target.value.trim()) { setWError(''); setInvalidFields(prev => ({ ...prev, proof: false })); }
+                          }}
                           rows={4}
                           placeholder="Scrivi i passaggi logici della dimostrazione..."
-                          className="w-full bg-white border border-sky-300 rounded-md p-3 text-xs text-[#0b192c] font-medium"
+                          className={`w-full bg-white border rounded-md p-3 text-xs font-medium transition-all ${invalidFields.proof ? 'border-rose-500 bg-rose-50/30 ring-1 ring-rose-500' : 'border-sky-300 text-[#0b192c]'}`}
                         />
                       </div>
                     )}
@@ -712,15 +955,26 @@
                   </div>
                 )}
 
-                {/* FOOTER WIZARD NAVIGATION */}
+                {/* FOOTER WIZARD NAVIGATION WITH CLEAN VALIDATION */}
                 <div className="flex justify-between pt-3 border-t border-sky-200">
                   {wStep > 1 ? (
-                    <button type="button" onClick={() => setWStep(wStep - 1)} className="px-4 py-1.5 bg-white border border-sky-300 text-sky-900 rounded-md text-xs font-bold hover:bg-sky-100">Indietro</button>
+                    <button type="button" onClick={() => { setWError(''); setInvalidFields({}); setWStep(wStep - 1); }} className="px-4 py-1.5 bg-white border border-sky-300 text-sky-900 rounded-md text-xs font-bold hover:bg-sky-100">Indietro</button>
                   ) : <div />}
+                  
                   {wStep < 4 ? (
-                    <button type="button" onClick={() => setWStep(wStep + 1)} className="px-4 py-1.5 bg-sky-600 text-white font-bold rounded-md text-xs hover:bg-sky-700">Avanti →</button>
+                    <button
+                      type="button"
+                      onClick={validateAndNextStep}
+                      className="px-4 py-1.5 bg-sky-600 text-[#ffffff] font-bold rounded-md text-xs hover:bg-sky-700 shadow-sm"
+                    >
+                      Avanti →
+                    </button>
                   ) : (
-                    <button type="button" onClick={handleSaveWizard} className="px-5 py-1.5 bg-sky-700 text-white font-bold rounded-md text-xs hover:bg-sky-800">
+                    <button
+                      type="button"
+                      onClick={handleSaveWizard}
+                      className="px-5 py-1.5 bg-sky-700 text-[#ffffff] font-bold rounded-md text-xs hover:bg-sky-800 shadow-sm"
+                    >
                       {editingItemId ? 'Salva Modifiche ✔' : 'Salva nel Database ✔'}
                     </button>
                   )}
@@ -769,7 +1023,7 @@
                     key={item.id}
                     disabled={matched.includes(item.id)}
                     onClick={() => setSelLeft(item)}
-                    className={`w-full p-3 rounded-md border text-left font-bold text-xs ${matched.includes(item.id) ? 'bg-sky-200 border-sky-300 text-sky-950 opacity-50' : selLeft?.id === item.id ? 'bg-sky-600 border-sky-600 text-white' : 'bg-white border-sky-200 text-[#0b192c]'}`}
+                    className={`w-full p-3 rounded-md border text-left font-bold text-xs ${matched.includes(item.id) ? 'bg-sky-200 border-sky-300 text-sky-950 opacity-50' : selLeft?.id === item.id ? 'bg-[#0369a1] border-[#0369a1] text-[#ffffff]' : 'bg-white border-sky-200 text-[#0b192c]'}`}
                   >
                     {item.name}
                   </button>
@@ -807,7 +1061,7 @@
       }
 
       return (
-        <div className="bg-sky-50/90 border border-sky-200 rounded-md p-6 space-y-5 max-w-3xl mx-auto shadow-sm">
+        <div className="bg-[#f0f9ff] border border-sky-200 rounded-md p-6 space-y-5 max-w-3xl mx-auto shadow-sm">
           <div className="border-b border-sky-200 pb-2">
             <span className="text-xs font-mono font-bold text-sky-900">Domanda {currentIdx + 1} di {activeList.length} • {currentItem.code}</span>
             <h3 className="text-xl font-bold text-[#0b192c] mt-0.5">{currentItem.name}</h3>
