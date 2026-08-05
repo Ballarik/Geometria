@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 const PORT = 3000;
 const HOST = '127.0.0.1';
 const DATA_FILE = path.join(__dirname, 'data.json');
+const LEARNING_FILE = path.join(__dirname, 'learning.json');
 const INDEX_FILE = path.join(__dirname, 'index.html');
 
 const server = http.createServer((req, res) => {
@@ -56,6 +57,34 @@ const server = http.createServer((req, res) => {
         console.log(`[SERVIZIO] Salvati ${parsed.length} elementi direttamente in data.json`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, count: parsed.length }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: e.message }));
+      }
+    });
+    return;
+  }
+
+  // READ LEARNING DATA
+  if (req.method === 'GET' && req.url === '/api/learning') {
+    fs.readFile(LEARNING_FILE, 'utf8', (err, data) => {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(data && data.trim() ? data : '{}');
+    });
+    return;
+  }
+
+  // SAVE LEARNING DATA
+  if (req.method === 'POST' && req.url === '/api/learning') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const parsed = JSON.parse(body);
+        fs.writeFileSync(LEARNING_FILE, JSON.stringify(parsed, null, 2), 'utf8');
+        console.log(`[ML] Aggiornati dati di apprendimento (${Object.keys(parsed).length} elementi)`);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true }));
       } catch (e) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: e.message }));

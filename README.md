@@ -65,6 +65,7 @@ git push origin main
 | `index.html` | Applicazione web (interfaccia) |
 | `server.js` | Server locale per il salvataggio su disco |
 | `data.json` | Database dei teoremi e definizioni (viene aggiornato automaticamente) |
+| `learning.json` | Dati di apprendimento automatico ML dei test (aggiornato automaticamente) |
 | `README.md` | Questo file |
 
 ---
