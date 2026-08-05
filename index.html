@@ -468,7 +468,19 @@
             return;
           }
           setInvalidFields({});
-          setWStep(4);
+          if (wType === 'theorem') {
+            setWStep(4);
+          } else {
+            setWStep(4); // For definition, step 4 is images & notes
+          }
+        } else if (wStep === 4 && wType === 'theorem') {
+          if (!wProof.trim()) {
+            setInvalidFields({ proof: true });
+            setWError('La dimostrazione è obbligatoria per i teoremi prima di proseguire.');
+            return;
+          }
+          setInvalidFields({});
+          setWStep(5);
         }
       };
 
@@ -547,7 +559,8 @@
             if (activeEl && activeEl.id === 'image-url-input') return;
 
             e.preventDefault();
-            if (wStep < 4) {
+            const totalSteps = wType === 'theorem' ? 5 : 4;
+            if (wStep < totalSteps) {
               validateAndNextStep();
             } else {
               handleSaveWizard();
@@ -558,6 +571,35 @@
         window.addEventListener('keydown', handleWizardEnter);
         return () => window.removeEventListener('keydown', handleWizardEnter);
       }, [isWizardOpen, wStep, wType, wChapter, wName, wContent, wProof]);
+
+      // PASTE LISTENER FOR CLIPBOARD IMAGES
+      useEffect(() => {
+        if (!isWizardOpen) return;
+
+        const handlePaste = (e) => {
+          const items = e.clipboardData?.items;
+          if (!items) return;
+
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.type.indexOf('image') !== -1) {
+              const file = item.getAsFile();
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                  if (evt.target?.result) {
+                    setWImages(prev => [...prev, evt.target.result]);
+                  }
+                };
+                reader.readAsDataURL(file);
+              }
+            }
+          }
+        };
+
+        window.addEventListener('paste', handlePaste);
+        return () => window.removeEventListener('paste', handlePaste);
+      }, [isWizardOpen]);
 
       const handleDeleteItem = (id) => {
         if (confirm('Eliminare questo elemento dal database?')) {
@@ -793,10 +835,11 @@
               onClick={() => setSelectedItem(null)}
             >
               <div
-                className="bg-white border border-sky-200 rounded-md max-w-2xl w-full p-6 space-y-4 shadow-xl"
+                className="bg-white border border-sky-200 rounded-md max-w-2xl w-full max-h-[90vh] flex flex-col p-6 shadow-xl"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex justify-between items-center border-b border-sky-100 pb-2">
+                {/* Header (Fisso in alto) */}
+                <div className="flex justify-between items-center border-b border-sky-100 pb-3 shrink-0 mb-3">
                   <div className="flex items-center space-x-2">
                     <span className="px-2 py-0.5 rounded-md bg-[#0b192c] text-white text-xs font-mono font-bold">{selectedItem.chapter}</span>
                     <span className="text-xs font-bold text-sky-900 uppercase">[{selectedItem.type}]</span>
@@ -812,58 +855,70 @@
                   />
                 </div>
 
-                <h2 className="text-xl font-black text-[#0b192c] uppercase">{selectedItem.name}</h2>
-                <div className="bg-sky-50/80 border border-sky-200 p-4 rounded-md">
-                  <h4 className="text-xs text-sky-900 font-bold uppercase mb-1">Enunciato / Testo</h4>
-                  <MathRender content={selectedItem.content} className="text-[#0b192c] text-sm" />
-                </div>
-                {selectedItem.proof && (
-                  <div className="bg-sky-100/50 border border-sky-300 p-4 rounded-md">
-                    <h4 className="text-xs text-sky-950 font-bold uppercase mb-1">Dimostrazione</h4>
-                    <MathRender content={selectedItem.proof} className="text-[#0b192c] text-sm" />
+                {/* Corpo Scorrevole */}
+                <div className="overflow-y-auto space-y-4 pr-1.5 flex-1">
+                  <h2 className="text-xl font-black text-[#0b192c] uppercase">{selectedItem.name}</h2>
+                  <div className="bg-sky-50/80 border border-sky-200 p-4 rounded-md">
+                    <h4 className="text-xs text-sky-900 font-bold uppercase mb-1">Enunciato / Testo</h4>
+                    <MathRender content={selectedItem.content} className="text-[#0b192c] text-sm" />
                   </div>
-                )}
-                {selectedItem.notes && (
-                  <div className="bg-amber-50 border border-amber-200 p-4 rounded-md">
-                    <h4 className="text-xs text-amber-900 font-bold uppercase mb-1">Note / Osservazioni</h4>
-                    <p className="text-slate-800 text-xs whitespace-pre-wrap">{selectedItem.notes}</p>
-                  </div>
-                )}
-                {selectedItem.images && selectedItem.images.length > 0 && (
-                  <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-md">
-                    <h4 className="text-xs text-indigo-900 font-bold uppercase mb-2">🖼️ Immagini</h4>
-                    <div className="space-y-1.5">
-                      {selectedItem.images.map((url, idx) => (
-                        <a
-                          key={idx}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-xs text-indigo-700 hover:text-indigo-900 hover:underline break-all transition-colors"
-                        >
-                          <span className="shrink-0">🔗</span>
-                          <span>{url}</span>
-                        </a>
-                      ))}
+                  {selectedItem.proof && (
+                    <div className="bg-sky-100/50 border border-sky-300 p-4 rounded-md">
+                      <h4 className="text-xs text-sky-950 font-bold uppercase mb-1">Dimostrazione</h4>
+                      <MathRender content={selectedItem.proof} className="text-[#0b192c] text-sm" />
                     </div>
-                  </div>
-                )}
-                <div className="flex justify-end pt-2">
-                  <button onClick={() => setSelectedItem(null)} className="px-4 py-1.5 bg-sky-600 text-white rounded-md text-xs font-bold">Chiudi</button>
+                  )}
+                  {selectedItem.notes && (
+                    <div className="bg-amber-50 border border-amber-200 p-4 rounded-md">
+                      <h4 className="text-xs text-amber-900 font-bold uppercase mb-1">Note / Osservazioni</h4>
+                      <p className="text-slate-800 text-xs whitespace-pre-wrap">{selectedItem.notes}</p>
+                    </div>
+                  )}
+                  {selectedItem.images && selectedItem.images.length > 0 && (
+                    <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-md space-y-3">
+                      <h4 className="text-xs text-indigo-900 font-bold uppercase">🖼️ Immagini</h4>
+                      <div className="space-y-3">
+                        {selectedItem.images.map((url, idx) => (
+                          <div key={idx} className="space-y-1">
+                            <img
+                              src={url}
+                              alt={`Immagine ${idx + 1}`}
+                              className="max-h-64 rounded-md border border-indigo-200 bg-white p-1 object-contain shadow-xs"
+                              onError={(e) => { e.target.style.display = 'none'; }}
+                            />
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-xs text-indigo-700 hover:text-indigo-900 hover:underline break-all transition-colors font-medium"
+                            >
+                              <span>🔗</span>
+                              <span>{url.startsWith('data:') ? 'Apri immagine a schermo intero' : url}</span>
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer (Fisso in basso) */}
+                <div className="flex justify-end pt-3 border-t border-sky-100 shrink-0 mt-3">
+                  <button onClick={() => setSelectedItem(null)} className="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-md text-xs font-bold transition-colors">Chiudi</button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 4-STEP WIZARD MODAL */}
+          {/* 4/5-STEP WIZARD MODAL */}
           {isWizardOpen && (
             <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white border border-sky-300 rounded-md max-w-xl w-full p-6 space-y-5 shadow-2xl">
+              <div className="bg-white border border-sky-300 rounded-md max-w-xl w-full max-h-[90vh] flex flex-col p-6 shadow-2xl">
                 
                 {/* WIZARD HEADER */}
                 <div className="flex justify-between items-center border-b border-sky-200 pb-3">
                   <div>
-                    <span className="text-xs font-extrabold text-sky-800 uppercase tracking-wider">PASSO {wStep} DI 4</span>
+                    <span className="text-xs font-extrabold text-sky-800 uppercase tracking-wider">PASSO {wStep} DI {wType === 'theorem' ? 5 : 4}</span>
                     <h3 className="text-lg font-bold text-[#0b192c]">
                       {editingItemId ? 'Modifica Elemento' : 'Nuovo Inserimento nel Database'}
                     </h3>
@@ -879,204 +934,257 @@
                   </div>
                 )}
 
-                {/* STEP 1: TYPE BUTTONS */}
-                {wStep === 1 && (
-                  <div className="space-y-3">
-                    <p className="text-[#0b192c] text-xs font-bold">1. Seleziona se desideri inserire un Teorema o una Definizione:</p>
-                    <div className="grid grid-cols-2 gap-4">
-                      <button
-                        type="button"
-                        onClick={() => { setWType('definition'); setWError(''); setInvalidFields({}); }}
-                        className={`p-5 rounded-md border flex flex-col items-center space-y-2 transition-all ${wType === 'definition' ? 'border-sky-600 bg-sky-100 text-sky-950 font-bold shadow-sm' : 'border-sky-200 bg-sky-50/50 text-sky-800'}`}
-                      >
-                        <span className="text-2xl">📘</span>
-                        <span className="text-sm font-bold">Definizione</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setWType('theorem'); setWError(''); setInvalidFields({}); }}
-                        className={`p-5 rounded-md border flex flex-col items-center space-y-2 transition-all ${wType === 'theorem' ? 'border-sky-600 bg-sky-100 text-sky-950 font-bold shadow-sm' : 'border-sky-200 bg-sky-50/50 text-sky-800'}`}
-                      >
-                        <span className="text-2xl">📜</span>
-                        <span className="text-sm font-bold">Teorema</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 2: CHAPTER & NAME */}
-                {wStep === 2 && (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold text-[#0b192c] mb-1">
-                        Seleziona Capitolo
-                      </label>
-                      <select
-                        value={wChapter}
-                        onChange={e => {
-                          setWChapter(e.target.value);
-                          if (e.target.value !== 'N') {
-                            setWError('');
-                            setInvalidFields(prev => ({ ...prev, chapter: false }));
-                          }
-                        }}
-                        className={`w-full bg-white border rounded-md p-2.5 text-xs font-medium transition-all ${invalidFields.chapter ? 'border-rose-500 bg-rose-50/30 text-rose-900 ring-1 ring-rose-500' : 'border-sky-300 text-[#0b192c]'}`}
-                      >
-                        <option value="N">N (Seleziona il capitolo...)</option>
-                        {CHAPTERS.map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-[#0b192c] mb-1">
-                        {wType === 'definition' ? 'Nome dell\'oggetto da definire' : 'Nome del teorema'}
-                      </label>
-                      <input
-                        type="text"
-                        value={wName}
-                        onChange={e => {
-                          setWName(e.target.value);
-                          if (e.target.value.trim()) {
-                            setWError('');
-                            setInvalidFields(prev => ({ ...prev, name: false }));
-                          }
-                        }}
-                        placeholder={wType === 'definition' ? 'Es. Triangolo Isoscele' : 'Es. Teorema di Pitagora'}
-                        className={`w-full bg-white border rounded-md p-2.5 text-xs font-medium transition-all ${invalidFields.name ? 'border-rose-500 bg-rose-50/30 text-rose-900 ring-1 ring-rose-500' : 'border-sky-300 text-[#0b192c]'}`}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 3: CONTENT WITH MATH SYMBOLS TOOLBAR */}
-                {wStep === 3 && (
-                  <div className="space-y-3">
-                    <label className="block text-xs font-bold text-[#0b192c]">
-                      {wType === 'definition' ? 'Testo della Definizione' : 'Enunciato del Teorema'}
-                    </label>
-
-                    {/* TOOLBAR SYMBOLS */}
-                    <MathSymbolsToolbar
-                      textareaRef={wContentRef}
-                      value={wContent}
-                      setValue={(val) => {
-                        setWContent(val);
-                        if (val.trim()) { setWError(''); setInvalidFields(prev => ({ ...prev, content: false })); }
-                      }}
-                    />
-
-                    <textarea
-                      ref={wContentRef}
-                      value={wContent}
-                      onChange={e => {
-                        setWContent(e.target.value);
-                        if (e.target.value.trim()) { setWError(''); setInvalidFields(prev => ({ ...prev, content: false })); }
-                      }}
-                      rows={5}
-                      placeholder="Inserisci il testo qui..."
-                      className={`w-full bg-white border rounded-md p-3 text-xs font-medium transition-all ${invalidFields.content ? 'border-rose-500 bg-rose-50/30 ring-1 ring-rose-500' : 'border-sky-300 text-[#0b192c]'}`}
-                    />
-                    {wContent && <div className="p-3 bg-sky-50 border border-sky-200 rounded-md text-xs"><MathRender content={wContent} /></div>}
-                  </div>
-                )}
-
-                {/* STEP 4: PROOF WITH MATH SYMBOLS TOOLBAR, IMAGES & OPTIONAL NOTES */}
-                {wStep === 4 && (
-                  <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-                    {wType === 'theorem' && (
-                      <div>
-                        <label className="block text-xs font-bold text-sky-900 mb-1">
-                          Dimostrazione del Teorema
-                        </label>
-                        
-                        {/* TOOLBAR SYMBOLS FOR PROOF */}
-                        <MathSymbolsToolbar
-                          textareaRef={wProofRef}
-                          value={wProof}
-                          setValue={(val) => {
-                            setWProof(val);
-                            if (val.trim()) { setWError(''); setInvalidFields(prev => ({ ...prev, proof: false })); }
-                          }}
-                        />
-
-                        <textarea
-                          ref={wProofRef}
-                          value={wProof}
-                          onChange={e => {
-                            setWProof(e.target.value);
-                            if (e.target.value.trim()) { setWError(''); setInvalidFields(prev => ({ ...prev, proof: false })); }
-                          }}
-                          rows={4}
-                          placeholder="Scrivi i passaggi logici della dimostrazione..."
-                          className={`w-full bg-white border rounded-md p-3 text-xs font-medium transition-all ${invalidFields.proof ? 'border-rose-500 bg-rose-50/30 ring-1 ring-rose-500' : 'border-sky-300 text-[#0b192c]'}`}
-                        />
-                      </div>
-                    )}
-                    <div>
-                      <label className="block text-xs font-bold text-[#0b192c] mb-1">Aggiungi URL Immagine (Facoltativo)</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="url"
-                          placeholder="https://..."
-                          id="image-url-input"
-                          onKeyDown={e => {
-                            if (e.key === 'Enter' && e.target.value.trim()) {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setWImages([...wImages, e.target.value.trim()]);
-                              e.target.value = '';
-                            }
-                          }}
-                          className="flex-1 bg-white border border-sky-300 rounded-md p-2.5 text-xs text-[#0b192c] font-medium"
-                        />
+                {/* CORPO SCORREVOLE WIZARD */}
+                <div className="overflow-y-auto flex-1 pr-1 space-y-4">
+                  {/* STEP 1: TYPE BUTTONS */}
+                  {wStep === 1 && (
+                    <div className="space-y-3">
+                      <p className="text-[#0b192c] text-xs font-bold">1. Seleziona se desideri inserire un Teorema o una Definizione:</p>
+                      <div className="grid grid-cols-2 gap-4">
                         <button
                           type="button"
-                          onClick={() => {
-                            const inp = document.getElementById('image-url-input');
-                            if (inp && inp.value.trim()) {
-                              setWImages([...wImages, inp.value.trim()]);
-                              inp.value = '';
+                          onClick={() => { setWType('definition'); setWError(''); setInvalidFields({}); }}
+                          className={`p-5 rounded-md border flex flex-col items-center space-y-2 transition-all ${wType === 'definition' ? 'border-sky-600 bg-sky-100 text-sky-950 font-bold shadow-sm' : 'border-sky-200 bg-sky-50/50 text-sky-800'}`}
+                        >
+                          <span className="text-2xl">📘</span>
+                          <span className="text-sm font-bold">Definizione</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setWType('theorem'); setWError(''); setInvalidFields({}); }}
+                          className={`p-5 rounded-md border flex flex-col items-center space-y-2 transition-all ${wType === 'theorem' ? 'border-sky-600 bg-sky-100 text-sky-950 font-bold shadow-sm' : 'border-sky-200 bg-sky-50/50 text-sky-800'}`}
+                        >
+                          <span className="text-2xl">📜</span>
+                          <span className="text-sm font-bold">Teorema</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STEP 2: CHAPTER & NAME */}
+                  {wStep === 2 && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-[#0b192c] mb-1">
+                          Seleziona Capitolo
+                        </label>
+                        <select
+                          value={wChapter}
+                          onChange={e => {
+                            setWChapter(e.target.value);
+                            if (e.target.value !== 'N') {
+                              setWError('');
+                              setInvalidFields(prev => ({ ...prev, chapter: false }));
                             }
                           }}
-                          className="px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-md text-xs font-bold transition-colors shrink-0"
-                        >+ Aggiungi</button>
+                          className={`w-full bg-white border rounded-md p-2.5 text-xs font-medium transition-all ${invalidFields.chapter ? 'border-rose-500 bg-rose-50/30 text-rose-900 ring-1 ring-rose-500' : 'border-sky-300 text-[#0b192c]'}`}
+                        >
+                          <option value="N">N (Seleziona il capitolo...)</option>
+                          {CHAPTERS.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
                       </div>
-                      {wImages.length > 0 && (
-                        <div className="mt-2 space-y-1">
-                          {wImages.map((url, idx) => (
-                            <div key={idx} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-md px-2.5 py-1.5">
-                              <span className="text-xs text-indigo-700 break-all flex-1">🔗 {url}</span>
-                              <button
-                                type="button"
-                                onClick={() => setWImages(wImages.filter((_, i) => i !== idx))}
-                                className="text-rose-500 hover:text-rose-700 text-xs font-bold shrink-0"
-                              >✕</button>
-                            </div>
-                          ))}
+                      <div>
+                        <label className="block text-xs font-bold text-[#0b192c] mb-1">
+                          {wType === 'definition' ? 'Nome dell\'oggetto da definire' : 'Nome del teorema'}
+                        </label>
+                        <input
+                          type="text"
+                          value={wName}
+                          onChange={e => {
+                            setWName(e.target.value);
+                            if (e.target.value.trim()) {
+                              setWError('');
+                              setInvalidFields(prev => ({ ...prev, name: false }));
+                            }
+                          }}
+                          placeholder={wType === 'definition' ? 'Es. Triangolo Isoscele' : 'Es. Teorema di Pitagora'}
+                          className={`w-full bg-white border rounded-md p-2.5 text-xs font-medium transition-all ${invalidFields.name ? 'border-rose-500 bg-rose-50/30 text-rose-900 ring-1 ring-rose-500' : 'border-sky-300 text-[#0b192c]'}`}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STEP 3: CONTENT WITH MATH SYMBOLS TOOLBAR */}
+                  {wStep === 3 && (
+                    <div className="space-y-3">
+                      <label className="block text-xs font-bold text-[#0b192c]">
+                        {wType === 'definition' ? 'Testo della Definizione' : 'Enunciato del Teorema'}
+                      </label>
+
+                      {/* TOOLBAR SYMBOLS */}
+                      <MathSymbolsToolbar
+                        textareaRef={wContentRef}
+                        value={wContent}
+                        setValue={(val) => {
+                          setWContent(val);
+                          if (val.trim()) { setWError(''); setInvalidFields(prev => ({ ...prev, content: false })); }
+                        }}
+                      />
+
+                      <textarea
+                        ref={wContentRef}
+                        value={wContent}
+                        onChange={e => {
+                          setWContent(e.target.value);
+                          if (e.target.value.trim()) { setWError(''); setInvalidFields(prev => ({ ...prev, content: false })); }
+                        }}
+                        rows={5}
+                        placeholder="Inserisci il testo qui..."
+                        className={`w-full bg-white border rounded-md p-3 text-xs font-medium transition-all ${invalidFields.content ? 'border-rose-500 bg-rose-50/30 ring-1 ring-rose-500' : 'border-sky-300 text-[#0b192c]'}`}
+                      />
+                      {wContent && <div className="p-3 bg-sky-50 border border-sky-200 rounded-md text-xs"><MathRender content={wContent} /></div>}
+                    </div>
+                  )}
+
+                  {/* STEP 4 FOR THEOREM: DIMOSTRAZIONE CON ANTEPRIMA */}
+                  {wStep === 4 && wType === 'theorem' && (
+                    <div className="space-y-3">
+                      <label className="block text-xs font-bold text-sky-900 mb-1">
+                        Dimostrazione del Teorema
+                      </label>
+                      
+                      {/* TOOLBAR SYMBOLS FOR PROOF */}
+                      <MathSymbolsToolbar
+                        textareaRef={wProofRef}
+                        value={wProof}
+                        setValue={(val) => {
+                          setWProof(val);
+                          if (val.trim()) { setWError(''); setInvalidFields(prev => ({ ...prev, proof: false })); }
+                        }}
+                      />
+
+                      <textarea
+                        ref={wProofRef}
+                        value={wProof}
+                        onChange={e => {
+                          setWProof(e.target.value);
+                          if (e.target.value.trim()) { setWError(''); setInvalidFields(prev => ({ ...prev, proof: false })); }
+                        }}
+                        rows={5}
+                        placeholder="Scrivi i passaggi logici della dimostrazione..."
+                        className={`w-full bg-white border rounded-md p-3 text-xs font-medium transition-all ${invalidFields.proof ? 'border-rose-500 bg-rose-50/30 ring-1 ring-rose-500' : 'border-sky-300 text-[#0b192c]'}`}
+                      />
+                      
+                      {/* LIVE MATH PREVIEW FOR PROOF */}
+                      {wProof && (
+                        <div className="p-3 bg-sky-50 border border-sky-200 rounded-md text-xs">
+                          <h4 className="text-[10px] font-bold text-sky-900 uppercase mb-1">Anteprima Dimostrazione:</h4>
+                          <MathRender content={wProof} />
                         </div>
                       )}
                     </div>
+                  )}
 
-                    {/* OPTIONAL NOTES FIELD */}
-                    <div>
-                      <label className="block text-xs font-bold text-[#0b192c] mb-1">Note Facoltative / Osservazioni (Facoltativo)</label>
-                      <textarea
-                        value={wNotes}
-                        onChange={e => setWNotes(e.target.value)}
-                        rows={3}
-                        placeholder="Aggiungi eventuali note, corollari o osservazioni personali..."
-                        className="w-full bg-white border border-sky-300 rounded-md p-2.5 text-xs text-[#0b192c] font-medium"
-                      />
+                  {/* STEP 5 FOR THEOREM / STEP 4 FOR DEFINITION: IMAGES & OPTIONAL NOTES */}
+                  {((wStep === 5 && wType === 'theorem') || (wStep === 4 && wType === 'definition')) && (
+                    <div className="space-y-4 pr-1">
+                      <div>
+                        <label className="block text-xs font-bold text-[#0b192c] mb-1">Aggiungi Immagine (Facoltativo)</label>
+                        <p className="text-[11px] text-sky-800 font-medium italic mb-2">💡 Puoi scegliere un file, incollare un link oppure incollare direttamente un'immagine dagli appunti con <strong>Cmd+V / Ctrl+V</strong>!</p>
+                        <div className="space-y-2">
+                          {/* File Upload Button */}
+                          <div className="flex items-center gap-2">
+                            <label className="flex-1 cursor-pointer bg-sky-50 hover:bg-sky-100 border border-sky-300 border-dashed rounded-md p-2.5 text-center transition-colors">
+                              <span className="text-xs font-bold text-sky-900 flex items-center justify-center gap-1.5">
+                                <span>📁</span>
+                                <span>Carica immagine dal tuo computer</span>
+                              </span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = (evt) => {
+                                      if (evt.target?.result) {
+                                        setWImages([...wImages, evt.target.result]);
+                                      }
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                  e.target.value = '';
+                                }}
+                              />
+                            </label>
+                          </div>
+
+                          {/* Or URL input */}
+                          <div className="flex gap-2">
+                            <input
+                              type="url"
+                              placeholder="Oppure incolla un URL (https://...)"
+                              id="image-url-input"
+                              onKeyDown={e => {
+                                if (e.key === 'Enter' && e.target.value.trim()) {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setWImages([...wImages, e.target.value.trim()]);
+                                  e.target.value = '';
+                                }
+                              }}
+                              className="flex-1 bg-white border border-sky-300 rounded-md p-2 text-xs text-[#0b192c] font-medium"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const inp = document.getElementById('image-url-input');
+                                if (inp && inp.value.trim()) {
+                                  setWImages([...wImages, inp.value.trim()]);
+                                  inp.value = '';
+                                }
+                              }}
+                              className="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-md text-xs font-bold transition-colors shrink-0"
+                            >+ Aggiungi Link</button>
+                          </div>
+                        </div>
+
+                        {wImages.length > 0 && (
+                          <div className="mt-3 space-y-2">
+                            {wImages.map((url, idx) => (
+                              <div key={idx} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-md p-2">
+                                {url.startsWith('data:') ? (
+                                  <img src={url} alt="Anteprima" className="w-10 h-10 object-cover rounded border border-indigo-200 bg-white" />
+                                ) : (
+                                  <span className="text-base">🔗</span>
+                                )}
+                                <span className="text-xs text-indigo-700 break-all flex-1 font-medium">
+                                  {url.startsWith('data:') ? `Immagine caricata dal computer (${idx + 1})` : url}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => setWImages(wImages.filter((_, i) => i !== idx))}
+                                  className="text-rose-500 hover:text-rose-700 text-xs font-bold shrink-0 px-1.5 py-0.5 rounded hover:bg-rose-100"
+                                >✕</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* OPTIONAL NOTES FIELD */}
+                      <div>
+                        <label className="block text-xs font-bold text-[#0b192c] mb-1">Note Facoltative / Osservazioni (Facoltativo)</label>
+                        <textarea
+                          value={wNotes}
+                          onChange={e => setWNotes(e.target.value)}
+                          rows={3}
+                          placeholder="Aggiungi eventuali note, corollari o osservazioni personali..."
+                          className="w-full bg-white border border-sky-300 rounded-md p-2.5 text-xs text-[#0b192c] font-medium"
+                        />
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 {/* FOOTER WIZARD NAVIGATION WITH CLEAN VALIDATION */}
-                <div className="flex justify-between pt-3 border-t border-sky-200">
+                <div className="flex justify-between pt-3 border-t border-sky-200 shrink-0 mt-3">
                   {wStep > 1 ? (
                     <button type="button" onClick={() => { setWError(''); setInvalidFields({}); setWStep(wStep - 1); }} className="px-4 py-1.5 bg-white border border-sky-300 text-sky-900 rounded-md text-xs font-bold hover:bg-sky-100">Indietro</button>
                   ) : <div />}
                   
-                  {wStep < 4 ? (
+                  {wStep < (wType === 'theorem' ? 5 : 4) ? (
                     <button
                       type="button"
                       onClick={validateAndNextStep}
