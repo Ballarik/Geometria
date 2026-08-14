@@ -45,7 +45,7 @@ export const TestCenter = ({ items }) => {
       alert('Nessun contenuto disponibile nei capitoli selezionati. Aggiungi contenuti o seleziona altri capitoli.');
       return;
     }
-    if (mode === 'write_definition' && activeDefinitions.length === 0) {
+    if ((mode === 'write_definition' || mode === 'matching') && activeDefinitions.length === 0) {
       alert('Non ci sono definizioni nei capitoli selezionati.');
       return;
     }
@@ -148,11 +148,11 @@ export const TestCenter = ({ items }) => {
                     Abbina l'Oggetto alla Definizione
                   </h4>
                   <p className="text-sm text-slate-400">
-                    Collega ogni nome di figura o teorema con il rispettivo testo in un gioco di abbinamento interattivo a coppie.
+                    Collega ogni nome di figura o concetto con la rispettiva definizione in un gioco di abbinamento interattivo a coppie.
                   </p>
                 </div>
                 <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-800/80">
-                  <span className="text-xs text-indigo-400 font-semibold">Test di Associazione Rapida</span>
+                  <span className="text-xs text-indigo-400 font-semibold">{activeDefinitions.length} Definizioni disponibili</span>
                   <ChevronRight className="w-5 h-5 text-indigo-400 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
@@ -240,7 +240,7 @@ export const TestCenter = ({ items }) => {
           </button>
 
           {activeTest === 'matching' && (
-            <MatchingTestRunner items={activeItems} onFinish={() => setActiveTest(null)} />
+            <MatchingTestRunner items={activeDefinitions} onFinish={() => setActiveTest(null)} />
           )}
 
           {activeTest === 'write_definition' && (

@@ -1248,7 +1248,7 @@
       }, []);
 
       const activeList = useMemo(() => {
-        if (mode === 'write_definition') return items.filter(i => i.type === 'definition');
+        if (mode === 'write_definition' || mode === 'matching') return items.filter(i => i.type === 'definition');
         if (mode === 'write_theorem' || mode === 'prove_theorem') return items.filter(i => i.type === 'theorem');
         return items;
       }, [items, mode]);

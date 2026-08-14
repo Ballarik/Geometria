@@ -1,205 +1,7 @@
-[
-  {
-    "id": "custom-1786715500702",
-    "code": "G6-T-C5B6EA",
-    "type": "theorem",
-    "chapter": "G6",
-    "name": "Il secondo teorema di Euclide",
-    "content": "In ogni triangolo rettangolo il quadrato costruito sull'altezza relativa all'ipotenusa è equivalente al rettangolo avente i lati congruenti alle proiezioni dei cateti sull'ipotenusa.",
-    "proof": "DIMOSTRAZIONE\nTracciamo BH, altezza relativa all'ipotenusa AC.\nDisegniamo il quadrato $Q_2$ di lato BC, il quadrato Q di lato BH e il rettangolo $R_1$ di base CH e altezza $CF \\cong AC$, ossia il rettangolo CFGH (figura a).\n\nConsideriamo su CF il punto D tale che $CD \\cong CH$ e su HG il punto E tale che $HE \\cong CH$. Chiamiamo $Q_1$ il quadrato CDEH.\nPoiché $CF \\cong AC$ e $CD \\cong CH$, il rettangolo EDFG è R.\nIl rettangolo $R_1$ è formato dal quadrato $Q_1$ e dal rettangolo R. Vale cioè la seguente relazione:\n$R_1 = Q_1 + R$.\n\nApplicando al triangolo HBC il teorema di Pitagora (figura b), otteniamo:\n$Q_2 \\doteq Q + Q_1 \\to Q \\doteq Q_2 - Q_1$.\n\nApplichiamo al triangolo ABC il primo teorema di Euclide (figura c):\n$Q_2 \\doteq R_1 \\to Q_2 \\doteq R + Q_1 \\to R \\doteq Q_2 - Q_1$.\n\nPoiché Q e R sono entrambi equivalenti a $Q_2 - Q_1$, sono equivalenti fra loro per la proprietà transitiva: $Q \\doteq R$.",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1786715077448",
-    "code": "G6-T-D5C32C",
-    "type": "theorem",
-    "chapter": "G6",
-    "name": "Il teorema di Pitagora",
-    "content": "In ogni triangolo rettangolo, il quadrato costruito sull'ipotenusa è equivalente alla somma dei quadrati costruiti sui cateti.",
-    "proof": "DIMOSTRAZIONE\nTracciamo l'altezza BH e prolunghiamola in modo da scomporre il quadrato Q nei rettangoli $R_1$ e $R_2$. Quindi $Q \\doteq R_1 + R_2$.\nL'altezza BH individua sull'ipotenusa AC i segmenti AH e CH, proiezioni dei cateti. Inoltre AH e CH sono le basi di $R_1$ e $R_2$, che hanno i lati congruenti alla proiezione di un cateto e all'ipotenusa. Quindi, per il primo teorema di Euclide:\n$Q_1 \\doteq R_1$, $Q_2 \\doteq R_2$.\nPoiché somme di figure equivalenti sono equivalenti: $R_1 + R_2 \\doteq Q_1 + Q_2$.\nPoiché $Q \\doteq R_1 + R_2$ e $R_1 + R_2 \\doteq Q_1 + Q_2$, per la proprietà transitiva dell'equivalenza si ottiene: $Q \\doteq Q_1 + Q_2$.",
-    "notes": "Applicazione del teorema di pitagora\nDiagonale del quadrato:\nd= l√2\n\nAltezza del triangolo Equilatero:\nh=l*(√3/2)\n\nLato di un triangolo equilatero inscritto in una cironferenza:\nl=r√3",
-    "images": []
-  },
-  {
-    "id": "custom-1786715077451",
-    "code": "G6-T-CD8F92",
-    "type": "theorem",
-    "chapter": "G6",
-    "name": "Inverso del teorema di Pitagora",
-    "content": "Se in un triangolo il quadrato costruito su un lato è equivalente alla somma dei quadrati costruiti sugli altri due lati, allora il triangolo è rettangolo.",
-    "proof": "DIMOSTRAZIONE\nSia ABC un triangolo tale che $\\overline{AC}^2 = \\overline{AB}^2 + \\overline{BC}^2$: dimostriamo che l'angolo $A\\widehat{B}C$ è retto. Costruiamo un triangolo A'B'C', rettangolo in B', tale che $A'B' \\cong AB$ e $B'C' \\cong BC$.\n\nNel triangolo A'B'C', per il teorema di Pitagora:\n$\\overline{A'C'}^2 = \\overline{A'B'}^2 + \\overline{B'C'}^2 = \\overline{AB}^2 + \\overline{BC}^2 = \\overline{AC}^2 \\to \\overline{A'C'} = \\overline{AC} \\to A'C' \\cong AC$.\n\nI triangoli ABC e A'B'C' hanno tre lati congruenti, quindi sono congruenti per il terzo criterio. In particolare $A\\widehat{B}C \\cong A'\\widehat{B'}C'$, cioè ABC è un triangolo rettangolo in B.",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1786714986193",
-    "code": "G6-T-6B2E5B",
-    "type": "theorem",
-    "chapter": "G6",
-    "name": "Il primo teorema di Euclide",
-    "content": "In ogni triangolo rettangolo, il quadrato costruito su un cateto è equivalente al rettangolo che ha i lati congruenti all'ipotenusa e alla proiezione dello stesso cateto sull'ipotenusa.",
-    "proof": "Ipotesi:\n1. ABC triangolo rettangolo in B con ipotenusa AC;\n2. ADEB quadrato costruito sul cateto AB;\n3. AHLM rettangolo di lati AH (proiezione di AB su AC) e AM \\cong AC.\n\nTesi:\n$ADEB \\doteq AHLM$ (ossia $Q \\doteq R$).\n\nDIMOSTRAZIONE\na. Dopo aver disegnato il quadrato ADEB e il rettangolo AHLM, prolunghiamo il lato DE.\nb. Prolunghiamo i lati MA e LH del rettangolo AHLM fino a incontrare il prolungamento di DE rispettivamente nei punti F e G.\nc. Indichiamo con $\\gamma$ l'angolo $B\\widehat{A}C$, con $\\alpha$ l'angolo $D\\widehat{A}F$ e con $\\beta$ l'angolo $F\\widehat{A}B$.\n\nI triangoli ABC e AFD hanno:\n• $AB \\cong AD$, per costruzione (ADEB è un quadrato);\n• $A\\widehat{B}C \\cong A\\widehat{D}F$, retti per costruzione;\n• $\\alpha \\cong \\gamma$, perché complementari dello stesso angolo $\\beta$.\nPertanto sono congruenti per il secondo criterio. In particolare hanno $AC \\cong AF$.\n\nIl quadrilatero AFGB è un parallelogramma, perché ha i lati opposti paralleli per costruzione.\nIl parallelogramma AFGB e il quadrato ADEB hanno la stessa base AB e la stessa altezza AD, quindi sono equivalenti.\nIl parallelogramma AFGB e il rettangolo AHLM hanno le basi congruenti $AF \\cong AM$ (perché entrambe congruenti all'ipotenusa) e la stessa altezza AH, quindi sono equivalenti.\nPoiché $ADEB \\doteq AFGB$ e $AFGB \\doteq AHLM$, per la proprietà transitiva dell'equivalenza abbiamo anche $ADEB \\doteq AHLM$, ossia $Q \\doteq R$.\nSi può procedere in modo analogo eseguendo la costruzione sull'altro cateto.",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1785933000003",
-    "code": "G6-D-6870C3",
-    "type": "definition",
-    "chapter": "G6",
-    "name": "Figure equicomposte o equiscomponibili",
-    "content": "Due figure che siano somme di figure congruenti si dicono equicomposte o equiscomponibili.",
-    "proof": "",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1785933000004",
-    "code": "G6-T-37038F",
-    "type": "theorem",
-    "chapter": "G6",
-    "name": "Equiscomponibilità ed equivalenza",
-    "content": "Due o più figure equicomposte sono equivalenti.",
-    "proof": "[no dimostrazione]",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1785933000005",
-    "code": "G6-T-88F7E1",
-    "type": "theorem",
-    "chapter": "G6",
-    "name": "L'equivalenza di parallelogrammi",
-    "content": "Due parallelogrammi che hanno le basi e le altezze corrispondenti congruenti sono equivalenti.",
-    "proof": "Ipotesi:\n1. ABCD e A'B'C'D' parallelogrammi;\n2. $AD \\cong A'D'$;\n3. $BH \\cong B'H'$.\n\nTesi:\n$ABCD \\doteq A'B'C'D'$.\n\nDIMOSTRAZIONE\nDisegniamo il parallelogramma AEFD congruente ad A'B'C'D' e di base AD.\nPoiché AEFD ha la stessa altezza di ABCD, la retta EF coincide con la retta BC. Si possono presentare i tre casi corrispondenti alle figure a, b e c.\nI parallelogrammi A'B'C'D' e AEFD sono congruenti, quindi sono anche equivalenti. Poiché vale la proprietà transitiva dell'equivalenza fra superfici, invece di dimostrare l'equivalenza fra ABCD e A'B'C'D', possiamo dimostrare l'equivalenza fra ABCD e AEFD. La dimostrazione è la stessa in ognuno dei tre casi. Facciamo quindi riferimento alla figura del primo caso.\nI triangoli ABE e DCF hanno:\n• $AB \\cong DC$, perché lati opposti di un parallelogramma;\n• $AE \\cong DF$, per lo stesso motivo;\n• $B\\widehat{A}E \\cong C\\widehat{D}F$, poiché i loro lati sono paralleli e concordi.\nPertanto essi sono congruenti per il primo criterio di congruenza dei triangoli.\nNotiamo che il parallelogramma ABCD è la somma fra il trapezio AECD e il triangolo ABE, mentre il parallelogramma AEFD è la somma fra lo stesso trapezio AECD e il triangolo DCF. Poiché sono somme di poligoni congruenti, i parallelogrammi ABCD e AEFD sono equivalenti. Per la proprietà transitiva $ABCD \\doteq A'B'C'D'$.",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1785933000007",
-    "code": "G6-T-2736BA",
-    "type": "theorem",
-    "chapter": "G6",
-    "name": "L'equivalenza fra triangolo e parallelogramma",
-    "content": "Un triangolo è equivalente a un parallelogramma che ha altezza congruente a quella del triangolo e base congruente a metà di quella del triangolo.",
-    "proof": "Ipotesi:\n1. ABNM parallelogramma;\n2. $AM = \\frac{1}{2} AC$.\n\nTesi:\n$ABC \\doteq ABNM$.\n\nDIMOSTRAZIONE\nTracciamo la semiretta Ba di origine B e parallela alla base AC e indichiamo con M il punto medio della base AC. Da M conduciamo la parallela ad AB che incontra BC in O e Ba in N.\nIl quadrilatero ABNM è un parallelogramma, perché ha i lati opposti paralleli per costruzione.\nI triangoli MOC e BON hanno:\n• $MC \\cong BN$, perché entrambi congruenti ad AM;\n• $M\\widehat{C}O \\cong O\\widehat{B}N$, perché angoli alterni interni formati dalle rette parallele AC e BN, tagliate dalla trasversale BC;\n• $O\\widehat{M}C \\cong O\\widehat{N}B$, perché angoli alterni interni formati dalle stesse rette parallele, tagliate dalla trasversale MN.\nPertanto i triangoli MOC e BON sono congruenti per il secondo criterio.\nIl triangolo ABC può essere considerato come somma del trapezio AMOB e del triangolo MOC.\nIl parallelogramma ABNM può essere considerato come somma dello stesso trapezio AMOB e del triangolo BON. Pertanto il triangolo ABC e il parallelogramma ABNM sono equicomposti e dunque sono equivalenti: $ABC \\doteq ABNM$.",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1785933000009",
-    "code": "G6-T-66068C",
-    "type": "theorem",
-    "chapter": "G6",
-    "name": "Equivalenza fra triangolo e parallelogramma (base congruente e altezza metà)",
-    "content": "Un triangolo è equivalente a un parallelogramma che ha base congruente a quella del triangolo e altezza congruente a metà altezza del triangolo.",
-    "proof": "[no dimostrazione]",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1785933000010",
-    "code": "G6-T-5E5F7B",
-    "type": "theorem",
-    "chapter": "G6",
-    "name": "L'equivalenza fra un quadrilatero con le diagonali perpendicolari e un rettangolo",
-    "content": "Un quadrilatero con le diagonali perpendicolari è equivalente alla metà del rettangolo che ha per lati le diagonali del quadrilatero.",
-    "proof": "[no dimostrazione]",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1785933000012",
-    "code": "G6-T-3B8F82",
-    "type": "theorem",
-    "chapter": "G6",
-    "name": "L'equivalenza fra trapezio e triangolo",
-    "content": "Un trapezio è equivalente a un triangolo che ha per altezza la stessa altezza e per base la somma delle basi del trapezio.",
-    "proof": "Ipotesi:\n1. ABCD trapezio;\n2. $AE = AD + BC$.\n\nTesi:\n$ABCD \\doteq ABE$.\n\nDIMOSTRAZIONE\nProlunghiamo la base AD del trapezio ABCD di un segmento $DE \\cong BC$. Congiungiamo E con B: il segmento BE interseca CD in O.\nConsideriamo i triangoli OBC e OED. Essi hanno:\n• $BC \\cong DE$, per costruzione;\n• $C\\widehat{B}O \\cong D\\widehat{E}O$, perché angoli alterni interni formati dalle rette parallele BC e AE, tagliate dalla trasversale BE;\n• $B\\widehat{C}O \\cong O\\widehat{D}E$, perché angoli alterni interni formati dalle stesse rette parallele, tagliate dalla trasversale CD.\nPertanto i triangoli OBC e OED sono congruenti per il secondo criterio.\nIl trapezio ABCD è la somma del quadrilatero ABOD e del triangolo OBC. Il triangolo ABE è la somma dello stesso quadrilatero ABOD e del triangolo OED. Il trapezio ABCD e il triangolo ABE sono equicomposti e quindi equivalenti: $ABCD \\doteq ABE$.",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1785933000013",
-    "code": "G6-T-B1A858",
-    "type": "theorem",
-    "chapter": "G6",
-    "name": "L'equivalenza fra un poligono circoscritto e un triangolo",
-    "content": "Un poligono circoscritto a una circonferenza è equivalente a un triangolo che ha la base congruente al perimetro del poligono e l'altezza congruente al raggio della circonferenza.",
-    "proof": "DIMOSTRAZIONE\nConsideriamo un qualsiasi poligono circoscritto a una circonferenza, per esempio il quadrilatero PQRS della figura.\nSe congiungiamo il centro O della circonferenza inscritta con i vertici, otteniamo quattro triangoli che hanno per basi i lati del poligono e per altezza il raggio della circonferenza.\nSu una retta disegniamo segmenti adiacenti congruenti ai lati del poligono: $AB \\cong PQ$, $BC \\cong QR$, $CD \\cong RS$, $DE \\cong SP$.\nScegliamo un punto qualsiasi F che abbia una distanza dalla retta uguale al raggio della circonferenza inscritta, cioè tale che la lunghezza del segmento FH sia uguale al raggio. Congiungiamo F con gli estremi dei segmenti tracciati.\nI quattro triangoli che formano il quadrilatero PQRS, aventi per basi i lati del poligono, e quelli che formano il triangolo AFE sono a due a due equivalenti perché hanno basi e altezze congruenti.\nQuindi $PQRS \\doteq AFE$ perché somme di triangoli equivalenti.",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1785933000015",
-    "code": "G6-T-889550",
-    "type": "theorem",
-    "chapter": "G6",
-    "name": "Trasformazione di un poligono in uno equivalente con un lato in meno",
-    "content": "È sempre possibile trasformare un poligono convesso di n lati in un poligono equivalente con n - 1 lati.",
-    "proof": "DIMOSTRAZIONE\nMostriamo come da un pentagono convesso qualsiasi sia possibile costruire un quadrilatero convesso equivalente. Il procedimento che useremo è indipendente dal numero di lati del poligono di partenza, quindi ci permette di dimostrare il teorema.\n• È dato il pentagono convesso ABCDE. Tracciamo la diagonale AC.\n• Tracciamo la retta per B parallela alla diagonale AC, che incontra in F il prolungamento di CD.\n• Congiungiamo A con F.\n• Tracciamo le distanze BH e FK dalla retta AC.\nI segmenti BH e FK sono uguali perché $BF \\parallel AC$ e sono le altezze dei triangoli ABC e AFC; quindi i triangoli sono equivalenti perché hanno la stessa base AC e altezze congruenti.\nIl pentagono ABCDE è la somma del quadrilatero ACDE e del triangolo ABC. Il quadrilatero AFDE è la somma di ACDE e del triangolo AFC. Quindi $ABCDE \\doteq AFDE$ perché somme di figure equivalenti.",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1785933000016",
-    "code": "G6-T-BE79AC",
-    "type": "theorem",
-    "chapter": "G6",
-    "name": "Equivalenza di un qualsiasi poligono convesso a un triangolo",
-    "content": "Un qualsiasi poligono convesso è sempre equivalente a un triangolo.",
-    "proof": "[no dimostrazione]",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1785933000017",
-    "code": "G6-T-51ECDE",
-    "type": "theorem",
-    "chapter": "G6",
-    "name": "Misura dell'area di un rettangolo",
-    "content": "La misura dell'area di un rettangolo è uguale al prodotto della misura della base per la misura dell'altezza ($A = b \\cdot h$).",
-    "proof": "[no dimostrazione]",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1785933000018",
-    "code": "G6-T-D956F0",
-    "type": "theorem",
-    "chapter": "G6",
-    "name": "Misura dell'area di un parallelogramma",
-    "content": "L'area di un parallelogramma è uguale al prodotto della misura di un suo lato, detto base, per la misura dell'altezza relativa a esso ($A = b \\cdot h$).",
-    "proof": "[no dimostrazione]",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1785933000019",
-    "code": "G6-D-15E522",
-    "type": "definition",
-    "chapter": "G6",
-    "name": "Formula di Erone",
-    "content": "La formula di Erone permette di calcolare l'area di un triangolo conoscendo solo le misure dei suoi lati a, b, c. Se $p = \\frac{a+b+c}{2}$ è il semiperimetro, la misura dell'area è: $A = \\sqrt{p \\cdot (p-a) \\cdot (p-b) \\cdot (p-c)}$.",
-    "proof": "",
-    "notes": "",
-    "images": []
-  },
-  {
-    "id": "custom-1786710636148",
-    "code": "G6-D-020822",
-    "type": "definition",
-    "chapter": "G6",
-    "name": "Superfici equivalenti",
-    "content": "due superfici he hanno la stessa estensione si dicono equivalenti",
-    "proof": "",
-    "notes": "",
-    "images": []
-  },
+window.GEOMETRIA_DATA = [
   {
     "id": "custom-1785932900001",
-    "code": "G5-T-4F7E8E",
+    "code": "G5-T-BARICENTRO",
     "type": "theorem",
     "chapter": "G5",
     "name": "Il baricentro di un triangolo",
@@ -210,7 +12,7 @@
   },
   {
     "id": "custom-1785932900002",
-    "code": "G5-D-97A23F",
+    "code": "G5-D-BARICENTRO",
     "type": "definition",
     "chapter": "G5",
     "name": "Baricentro",
@@ -221,7 +23,7 @@
   },
   {
     "id": "custom-1785932900003",
-    "code": "G5-T-B812D4",
+    "code": "G5-T-QUAINSC",
     "type": "theorem",
     "chapter": "G5",
     "name": "I quadrilateri inscritti",
@@ -232,7 +34,7 @@
   },
   {
     "id": "custom-1785932900004",
-    "code": "G5-T-91E41D",
+    "code": "G5-T-INVQUAINSC",
     "type": "theorem",
     "chapter": "G5",
     "name": "Inverso dei quadrilateri inscritti",
@@ -243,7 +45,7 @@
   },
   {
     "id": "custom-1785932900005",
-    "code": "G5-T-07AB5D",
+    "code": "G5-T-CONNSQUAINSC",
     "type": "theorem",
     "chapter": "G5",
     "name": "Condizione necessaria e sufficiente per l'iscrivibilità dei quadrilateri",
@@ -254,7 +56,7 @@
   },
   {
     "id": "custom-1785932900006",
-    "code": "G5-T-A8AF97",
+    "code": "G5-T-QUACIRC",
     "type": "theorem",
     "chapter": "G5",
     "name": "I quadrilateri circoscritti",
@@ -265,7 +67,7 @@
   },
   {
     "id": "custom-1785932900007",
-    "code": "G5-T-AD783E",
+    "code": "G5-T-INVQUACIRC",
     "type": "theorem",
     "chapter": "G5",
     "name": "Inverso dei quadrilateri circoscritti",
@@ -276,7 +78,7 @@
   },
   {
     "id": "custom-1785932900008",
-    "code": "G5-T-B6BDAD",
+    "code": "G5-T-CONNSQUACIRC",
     "type": "theorem",
     "chapter": "G5",
     "name": "Condizione necessaria e sufficiente per la circoscrivibilità dei quadrilateri",
@@ -287,7 +89,7 @@
   },
   {
     "id": "custom-1785932900009",
-    "code": "G5-D-764631",
+    "code": "G5-D-POLREG",
     "type": "definition",
     "chapter": "G5",
     "name": "Poligono regolare",
@@ -298,7 +100,7 @@
   },
   {
     "id": "custom-17859329000010",
-    "code": "G5-T-708DE2",
+    "code": "G5-T-POLREGINSCCIRC",
     "type": "theorem",
     "chapter": "G5",
     "name": "Inscrivibilità e circoscrivibilità dei poligoni regolari",
@@ -309,7 +111,7 @@
   },
   {
     "id": "custom-1785932900011",
-    "code": "G5-T-1DC368",
+    "code": "G5-T-CIRDIVARC",
     "type": "theorem",
     "chapter": "G5",
     "name": "La circonferenza divisa in archi congruenti",
@@ -320,7 +122,7 @@
   },
   {
     "id": "custom-1785932900012",
-    "code": "G5-T-6F072A",
+    "code": "G5-T-LATESAINSC",
     "type": "theorem",
     "chapter": "G5",
     "name": "Il lato dell'esagono regolare iscritto",
@@ -331,7 +133,7 @@
   },
   {
     "id": "custom-1785932800001",
-    "code": "G5-T-084401",
+    "code": "G5-T-POSDUECIR",
     "type": "theorem",
     "chapter": "G5",
     "name": "La posizione reciproca fra due circonferenze e la distanza fra i loro centri",
@@ -342,7 +144,7 @@
   },
   {
     "id": "custom-1785932800002",
-    "code": "G5-D-4F6F1D",
+    "code": "G5-D-ANGCIR",
     "type": "definition",
     "chapter": "G5",
     "name": "Angolo alla circonferenza",
@@ -353,7 +155,7 @@
   },
   {
     "id": "custom-1785932800003",
-    "code": "G5-T-800BBC",
+    "code": "G5-T-ANGCENCIR",
     "type": "theorem",
     "chapter": "G5",
     "name": "La proprietà degli angoli al centro e alla circonferenza corrispondenti",
@@ -364,7 +166,7 @@
   },
   {
     "id": "custom-1785932800004",
-    "code": "G5-T-BCEBDA",
+    "code": "G5-T-CORANGCIR",
     "type": "theorem",
     "chapter": "G5",
     "name": "Corollari degli angoli alla circonferenza",
@@ -375,7 +177,7 @@
   },
   {
     "id": "custom-1785932800005",
-    "code": "G5-T-437400",
+    "code": "G5-T-LUEANGRET",
     "type": "theorem",
     "chapter": "G5",
     "name": "Il luogo dei punti che vedono un segmento sotto un angolo retto",
@@ -386,7 +188,7 @@
   },
   {
     "id": "custom-1785932800006",
-    "code": "G5-D-6E236E",
+    "code": "G5-D-POLISC",
     "type": "definition",
     "chapter": "G5",
     "name": "Poligono iscritto e circoscritto",
@@ -397,7 +199,7 @@
   },
   {
     "id": "custom-1785932800007",
-    "code": "G5-T-B016E7",
+    "code": "G5-T-CONISC",
     "type": "theorem",
     "chapter": "G5",
     "name": "Condizione di iscrivibilità di un poligono",
@@ -408,7 +210,7 @@
   },
   {
     "id": "custom-1785932800008",
-    "code": "G5-D-BDEC23",
+    "code": "G5-D-POLCIR",
     "type": "definition",
     "chapter": "G5",
     "name": "Poligono circoscritto",
@@ -419,7 +221,7 @@
   },
   {
     "id": "custom-1785932800009",
-    "code": "G5-T-54957D",
+    "code": "G5-T-CONCIR",
     "type": "theorem",
     "chapter": "G5",
     "name": "Condizione di circoscrivibilità di un poligono",
@@ -430,7 +232,7 @@
   },
   {
     "id": "custom-1785932800010",
-    "code": "G5-T-49A1CF",
+    "code": "G5-T-CIRCENTRO",
     "type": "theorem",
     "chapter": "G5",
     "name": "Il circocentro di un triangolo",
@@ -441,7 +243,7 @@
   },
   {
     "id": "custom-1785932800011",
-    "code": "G5-D-3DAD83",
+    "code": "G5-D-CIRCENTRO",
     "type": "definition",
     "chapter": "G5",
     "name": "Circocentro",
@@ -452,7 +254,7 @@
   },
   {
     "id": "custom-1785932800012",
-    "code": "G5-T-198987",
+    "code": "G5-T-INCENTRO",
     "type": "theorem",
     "chapter": "G5",
     "name": "L'invalido / l'incentro di un triangolo",
@@ -463,7 +265,7 @@
   },
   {
     "id": "custom-1785932800013",
-    "code": "G5-D-F8CBBF",
+    "code": "G5-D-INCENTRO",
     "type": "definition",
     "chapter": "G5",
     "name": "Incentro",
@@ -474,7 +276,7 @@
   },
   {
     "id": "custom-1785932800014",
-    "code": "G5-T-982106",
+    "code": "G5-T-EXCENTRO",
     "type": "theorem",
     "chapter": "G5",
     "name": "L'excentro di un triangolo",
@@ -485,7 +287,7 @@
   },
   {
     "id": "custom-1785932800015",
-    "code": "G5-D-5FF87E",
+    "code": "G5-D-EXCENTRO",
     "type": "definition",
     "chapter": "G5",
     "name": "Excentro",
@@ -496,7 +298,7 @@
   },
   {
     "id": "custom-1785932800016",
-    "code": "G5-T-C324E4",
+    "code": "G5-T-ORTOCENTRO",
     "type": "theorem",
     "chapter": "G5",
     "name": "L'ortocentro di un triangolo",
@@ -507,7 +309,7 @@
   },
   {
     "id": "custom-1785932800017",
-    "code": "G5-D-060DE0",
+    "code": "G5-D-ORTOCENTRO",
     "type": "definition",
     "chapter": "G5",
     "name": "Ortocentro",
@@ -518,7 +320,7 @@
   },
   {
     "id": "custom-1785932700001",
-    "code": "G5-T-9A4035",
+    "code": "G5-T-RELDIA",
     "type": "theorem",
     "chapter": "G5",
     "name": "La relazione fra diametro e corde",
@@ -529,7 +331,7 @@
   },
   {
     "id": "custom-1785932700002",
-    "code": "G5-T-E2A34A",
+    "code": "G5-T-DIAPERP",
     "type": "theorem",
     "chapter": "G5",
     "name": "Il diametro perpendicolare a una corda",
@@ -540,7 +342,7 @@
   },
   {
     "id": "custom-1785932700003",
-    "code": "G5-T-248CED",
+    "code": "G5-T-DIAPUNMED",
     "type": "theorem",
     "chapter": "G5",
     "name": "Il diametro per il punto medio di una corda",
@@ -551,7 +353,7 @@
   },
   {
     "id": "custom-1785932700004",
-    "code": "G5-T-F2A3A8",
+    "code": "G5-T-CORCONDIS",
     "type": "theorem",
     "chapter": "G5",
     "name": "Le corde congruenti e la distanza dal centro",
@@ -562,7 +364,7 @@
   },
   {
     "id": "custom-1785932700005",
-    "code": "G5-T-48E6CA",
+    "code": "G5-T-INVCORCONDIS",
     "type": "theorem",
     "chapter": "G5",
     "name": "Inverso di corde congruenti e distanza dal centro",
@@ -573,7 +375,7 @@
   },
   {
     "id": "custom-1785932700006",
-    "code": "G5-T-60CAC5",
+    "code": "G5-T-CORNONCON",
     "type": "theorem",
     "chapter": "G5",
     "name": "Le corde non congruenti e la distanza dal centro",
@@ -584,7 +386,7 @@
   },
   {
     "id": "custom-1785932700007",
-    "code": "G5-D-8C1D85",
+    "code": "G5-D-RETSEC",
     "type": "definition",
     "chapter": "G5",
     "name": "Rette secanti, tangenti ed esterne a una circonferenza",
@@ -595,7 +397,7 @@
   },
   {
     "id": "custom-1785932700008",
-    "code": "G5-T-A603A0",
+    "code": "G5-T-POSREC",
     "type": "theorem",
     "chapter": "G5",
     "name": "Le posizioni reciproche fra retta e circonferenza",
@@ -606,7 +408,7 @@
   },
   {
     "id": "custom-1785932700009",
-    "code": "G5-T-C32B42",
+    "code": "G5-T-POSRECNS",
     "type": "theorem",
     "chapter": "G5",
     "name": "Condizione necessaria e sufficiente fra retta e circonferenza",
@@ -617,7 +419,7 @@
   },
   {
     "id": "custom-1785932700010",
-    "code": "G5-T-51459F",
+    "code": "G5-T-TANPERPRAG",
     "type": "theorem",
     "chapter": "G5",
     "name": "Tangente perpendicolare al raggio",
@@ -628,7 +430,7 @@
   },
   {
     "id": "custom-1785932700011",
-    "code": "G5-T-3E432D",
+    "code": "G5-T-INVTANPERP",
     "type": "theorem",
     "chapter": "G5",
     "name": "Inverso della tangente perpendicolare al raggio",
@@ -639,7 +441,7 @@
   },
   {
     "id": "custom-1785932700012",
-    "code": "G5-T-3127B7",
+    "code": "G5-T-TANPUNEST",
     "type": "theorem",
     "chapter": "G5",
     "name": "Le tangenti passanti per un punto esterno alla circonferenza",
@@ -650,7 +452,7 @@
   },
   {
     "id": "custom-1785932600001",
-    "code": "G5-D-9DCD49",
+    "code": "G5-D-LUEGEO",
     "type": "definition",
     "chapter": "G5",
     "name": "Luogo geometrico",
@@ -661,7 +463,7 @@
   },
   {
     "id": "custom-1785932600002",
-    "code": "G5-T-A19097",
+    "code": "G5-T-ASSSEG",
     "type": "theorem",
     "chapter": "G5",
     "name": "L'asse di un segmento come luogo geometrico",
@@ -672,7 +474,7 @@
   },
   {
     "id": "custom-1785932600003",
-    "code": "G5-T-11C6BE",
+    "code": "G5-T-BISANG",
     "type": "theorem",
     "chapter": "G5",
     "name": "La bisettrice di un angolo come luogo geometrico",
@@ -683,7 +485,7 @@
   },
   {
     "id": "custom-1785932600004",
-    "code": "G5-D-955D7C",
+    "code": "G5-D-CIRCON",
     "type": "definition",
     "chapter": "G5",
     "name": "Circonferenza",
@@ -694,7 +496,7 @@
   },
   {
     "id": "custom-1785932600005",
-    "code": "G5-D-953611",
+    "code": "G5-D-CERCHI",
     "type": "definition",
     "chapter": "G5",
     "name": "Cerchio",
@@ -705,7 +507,7 @@
   },
   {
     "id": "custom-1785932600006",
-    "code": "G5-T-2679B6",
+    "code": "G5-T-CIR3PUN",
     "type": "theorem",
     "chapter": "G5",
     "name": "La circonferenza per tre punti non allineati",
@@ -716,7 +518,7 @@
   },
   {
     "id": "custom-1785932600007",
-    "code": "G5-D-FFDE6B",
+    "code": "G5-D-ARCCIR",
     "type": "definition",
     "chapter": "G5",
     "name": "Arco di circonferenza",
@@ -727,7 +529,7 @@
   },
   {
     "id": "custom-1785932600008",
-    "code": "G5-D-C66520",
+    "code": "G5-D-ANGCEN",
     "type": "definition",
     "chapter": "G5",
     "name": "Angolo al centro",
@@ -738,7 +540,7 @@
   },
   {
     "id": "custom-1785932600009",
-    "code": "G5-T-065550",
+    "code": "G5-T-CORARC",
     "type": "theorem",
     "chapter": "G5",
     "name": "Corde e archi congruenti",
@@ -749,7 +551,7 @@
   },
   {
     "id": "custom-1785932600010",
-    "code": "G5-D-F6A766",
+    "code": "G5-D-SETCIR",
     "type": "definition",
     "chapter": "G5",
     "name": "Settore circolare",
@@ -760,7 +562,7 @@
   },
   {
     "id": "custom-1785932600011",
-    "code": "G5-D-87C9B2",
+    "code": "G5-D-SEGCIR",
     "type": "definition",
     "chapter": "G5",
     "name": "Segmento circolare",
@@ -771,7 +573,7 @@
   },
   {
     "id": "custom-1785932500001",
-    "code": "G4-T-4B1D0C",
+    "code": "G4-T-PROQUAD",
     "type": "theorem",
     "chapter": "G4",
     "name": "Le proprietà delle diagonali del quadrato",
@@ -782,7 +584,7 @@
   },
   {
     "id": "custom-1785932500002",
-    "code": "G4-T-1F7F29",
+    "code": "G4-T-SUFQUAD",
     "type": "theorem",
     "chapter": "G4",
     "name": "Condizioni sufficienti perché un parallelogramma sia un quadrato",
@@ -793,7 +595,7 @@
   },
   {
     "id": "custom-1785932500003",
-    "code": "G4-D-68F30C",
+    "code": "G4-D-TRAPEZ",
     "type": "definition",
     "chapter": "G4",
     "name": "Trapezio",
@@ -804,7 +606,7 @@
   },
   {
     "id": "custom-1785932500004",
-    "code": "G4-D-93352A",
+    "code": "G4-D-TRAPISO",
     "type": "definition",
     "chapter": "G4",
     "name": "Trapezio isoscele",
@@ -815,7 +617,7 @@
   },
   {
     "id": "custom-1785932500005",
-    "code": "G4-D-E0DBC4",
+    "code": "G4-D-TRAPRET",
     "type": "definition",
     "chapter": "G4",
     "name": "Trapezio rettangolo",
@@ -826,7 +628,7 @@
   },
   {
     "id": "custom-1785932500006",
-    "code": "G4-T-5CD925",
+    "code": "G4-T-TEOTRAPISO",
     "type": "theorem",
     "chapter": "G4",
     "name": "Il teorema del trapezio isoscele",
@@ -837,7 +639,7 @@
   },
   {
     "id": "custom-1785932500007",
-    "code": "G4-T-BF7572",
+    "code": "G4-T-INVTRAPISO",
     "type": "theorem",
     "chapter": "G4",
     "name": "L'inverso del teorema del trapezio isoscele",
@@ -848,7 +650,7 @@
   },
   {
     "id": "custom-1785932500008",
-    "code": "G4-T-1B2F14",
+    "code": "G4-T-FASPAR",
     "type": "theorem",
     "chapter": "G4",
     "name": "Il teorema del fascio di rette parallele",
@@ -859,7 +661,7 @@
   },
   {
     "id": "custom-1785932500009",
-    "code": "G4-T-E367AF",
+    "code": "G4-T-MEDTRI",
     "type": "theorem",
     "chapter": "G4",
     "name": "Il segmento con estremi nei punti medi dei lati di un triangolo",
@@ -870,7 +672,7 @@
   },
   {
     "id": "custom-1785932500010",
-    "code": "G4-T-6EC74F",
+    "code": "G4-T-MEDTRAP",
     "type": "theorem",
     "chapter": "G4",
     "name": "Il segmento con estremi nei punti medi dei lati di un trapezio",
@@ -881,7 +683,7 @@
   },
   {
     "id": "custom-1785932400001",
-    "code": "G4-D-6DE690",
+    "code": "G4-D-PARALL",
     "type": "definition",
     "chapter": "G4",
     "name": "Parallelogramma",
@@ -892,7 +694,7 @@
   },
   {
     "id": "custom-1785932400002",
-    "code": "G4-T-C03B9A",
+    "code": "G4-T-PROPAR",
     "type": "theorem",
     "chapter": "G4",
     "name": "Le proprietà dei parallelogrammi",
@@ -903,7 +705,7 @@
   },
   {
     "id": "custom-1785932400003",
-    "code": "G4-T-3D3BF2",
+    "code": "G4-T-CRIPAR",
     "type": "theorem",
     "chapter": "G4",
     "name": "I criteri per stabilire se un quadrilatero è un parallelogramma",
@@ -914,7 +716,7 @@
   },
   {
     "id": "custom-1785932400004",
-    "code": "G4-D-AB2898",
+    "code": "G4-D-RETTAN",
     "type": "definition",
     "chapter": "G4",
     "name": "Rettangolo",
@@ -925,7 +727,7 @@
   },
   {
     "id": "custom-1785932400005",
-    "code": "G4-T-EAD757",
+    "code": "G4-T-DIAGRET",
     "type": "theorem",
     "chapter": "G4",
     "name": "Una proprietà delle diagonali del rettangolo",
@@ -936,7 +738,7 @@
   },
   {
     "id": "custom-1785932400006",
-    "code": "G4-T-E92AB4",
+    "code": "G4-T-SUFRET",
     "type": "theorem",
     "chapter": "G4",
     "name": "Condizione sufficiente perché un parallelogramma sia un rettangolo",
@@ -947,7 +749,7 @@
   },
   {
     "id": "custom-1785932400007",
-    "code": "G4-D-ED71B8",
+    "code": "G4-D-ROMBO",
     "type": "definition",
     "chapter": "G4",
     "name": "Rombo",
@@ -958,7 +760,7 @@
   },
   {
     "id": "custom-1785932400008",
-    "code": "G4-T-EFAD06",
+    "code": "G4-T-DIAGROM",
     "type": "theorem",
     "chapter": "G4",
     "name": "Le proprietà delle diagonali del rombo",
@@ -969,7 +771,7 @@
   },
   {
     "id": "custom-1785932400009",
-    "code": "G4-T-D16F45",
+    "code": "G4-T-SUFROM1",
     "type": "theorem",
     "chapter": "G4",
     "name": "Condizione sufficiente 1 perché un parallelogramma sia un rombo",
@@ -980,7 +782,7 @@
   },
   {
     "id": "custom-1785932400010",
-    "code": "G4-T-AFC247",
+    "code": "G4-T-SUFROM2",
     "type": "theorem",
     "chapter": "G4",
     "name": "Condizione sufficiente 2 perché un parallelogramma sia un rombo",
@@ -991,7 +793,7 @@
   },
   {
     "id": "custom-1785932400011",
-    "code": "G4-D-6D15CB",
+    "code": "G4-D-QUADRA",
     "type": "definition",
     "chapter": "G4",
     "name": "Quadrato",
@@ -1002,7 +804,7 @@
   },
   {
     "id": "custom-1785932200001",
-    "code": "G3-T-22A8DD",
+    "code": "G3-T-ANGEST2",
     "type": "theorem",
     "chapter": "G3",
     "name": "Teorema dell'angolo esterno",
@@ -1013,7 +815,7 @@
   },
   {
     "id": "custom-1785932200002",
-    "code": "G3-T-1D8CAB",
+    "code": "G3-T-SOMINT",
     "type": "theorem",
     "chapter": "G3",
     "name": "La somma degli angoli interni di un triangolo",
@@ -1024,7 +826,7 @@
   },
   {
     "id": "custom-1785932200005",
-    "code": "G3-T-C86B18",
+    "code": "G3-T-SECGEN",
     "type": "theorem",
     "chapter": "G3",
     "name": "Secondo criterio di congruenza dei triangoli generalizzato",
@@ -1035,7 +837,7 @@
   },
   {
     "id": "custom-1785932200006",
-    "code": "G3-T-23E45F",
+    "code": "G3-T-SOMPOL",
     "type": "theorem",
     "chapter": "G3",
     "name": "La somma degli angoli interni di un poligono convesso",
@@ -1046,7 +848,7 @@
   },
   {
     "id": "custom-1785932200007",
-    "code": "G3-T-89B283",
+    "code": "G3-T-SOMESTPOL",
     "type": "theorem",
     "chapter": "G3",
     "name": "La somma degli angoli esterni di un poligono convesso",
@@ -1057,7 +859,7 @@
   },
   {
     "id": "custom-1785932200008",
-    "code": "G3-T-1859AC",
+    "code": "G3-T-CRITRIRET",
     "type": "theorem",
     "chapter": "G3",
     "name": "I primi tre criteri di congruenza dei triangoli rettangoli",
@@ -1068,7 +870,7 @@
   },
   {
     "id": "custom-1785932200009",
-    "code": "G3-T-507F08",
+    "code": "G3-T-QUACRIRET",
     "type": "theorem",
     "chapter": "G3",
     "name": "Quarto criterio di congruenza dei triangoli rettangoli",
@@ -1079,7 +881,7 @@
   },
   {
     "id": "custom-1785932200010",
-    "code": "G3-T-2544FA",
+    "code": "G3-T-MEDIPO",
     "type": "theorem",
     "chapter": "G3",
     "name": "Mediana relativa all'ipotenusa",
@@ -1090,7 +892,7 @@
   },
   {
     "id": "custom-1785932200011",
-    "code": "G3-T-F75484",
+    "code": "G3-T-DISRETPAR",
     "type": "theorem",
     "chapter": "G3",
     "name": "Rette parallele e distanza di punti da rette",
@@ -1101,7 +903,7 @@
   },
   {
     "id": "custom-1785932200012",
-    "code": "G3-D-C0914A",
+    "code": "G3-D-DISRETPAR",
     "type": "definition",
     "chapter": "G3",
     "name": "Distanza tra due rette parallele",
@@ -1112,7 +914,7 @@
   },
   {
     "id": "custom-1785931900001",
-    "code": "G3-D-DA1A82",
+    "code": "G3-D-RETPAR",
     "type": "definition",
     "chapter": "G3",
     "name": "Rette parallele",
@@ -1123,7 +925,7 @@
   },
   {
     "id": "custom-1785931900002",
-    "code": "G3-T-083566",
+    "code": "G3-T-CRIPAR",
     "type": "theorem",
     "chapter": "G3",
     "name": "Il criterio di parallelismo",
@@ -1134,7 +936,7 @@
   },
   {
     "id": "custom-1785931900003",
-    "code": "G3-T-785217",
+    "code": "G3-T-CRIPARGEN",
     "type": "theorem",
     "chapter": "G3",
     "name": "Criterio di parallelismo (generale)",
@@ -1145,7 +947,7 @@
   },
   {
     "id": "custom-1785931900005",
-    "code": "G3-T-B5054C",
+    "code": "G3-T-ESIPAR",
     "type": "theorem",
     "chapter": "G3",
     "name": "Esistenza della parallela",
@@ -1156,7 +958,7 @@
   },
   {
     "id": "custom-1785931900007",
-    "code": "G3-T-B7EFC6",
+    "code": "G3-T-INVPAR",
     "type": "theorem",
     "chapter": "G3",
     "name": "L'inverso del criterio di parallelismo",
@@ -1167,7 +969,7 @@
   },
   {
     "id": "custom-1785931900008",
-    "code": "G3-T-9A4438",
+    "code": "G3-T-INVPARGEN",
     "type": "theorem",
     "chapter": "G3",
     "name": "Inverso del criterio di parallelismo (generale)",
@@ -1178,7 +980,7 @@
   },
   {
     "id": "custom-1785931900012",
-    "code": "G3-T-BDC8D7",
+    "code": "G3-T-CONNEC",
     "type": "theorem",
     "chapter": "G3",
     "name": "Condizione necessaria e sufficiente per il parallelismo",
@@ -1189,7 +991,7 @@
   },
   {
     "id": "custom-1785931900013",
-    "code": "G3-D-468FC9",
+    "code": "G3-D-SEMCON",
     "type": "definition",
     "chapter": "G3",
     "name": "Semirette concordi e discordi",
@@ -1200,7 +1002,7 @@
   },
   {
     "id": "custom-1785931800001",
-    "code": "G3-D-49B942",
+    "code": "G3-D-RETPER",
     "type": "definition",
     "chapter": "G3",
     "name": "Rette perpendicolari",
@@ -1211,7 +1013,7 @@
   },
   {
     "id": "custom-1785931800002",
-    "code": "G3-D-0209C7",
+    "code": "G3-D-RETOBL",
     "type": "definition",
     "chapter": "G3",
     "name": "Rette oblique",
@@ -1222,7 +1024,7 @@
   },
   {
     "id": "custom-1785931800003",
-    "code": "G3-T-FF4D02",
+    "code": "G3-T-ESIPER",
     "type": "theorem",
     "chapter": "G3",
     "name": "Esistenza e unicità della perpendicolare",
@@ -1233,7 +1035,7 @@
   },
   {
     "id": "custom-1785931800005",
-    "code": "G3-D-AF0261",
+    "code": "G3-D-PROORT",
     "type": "definition",
     "chapter": "G3",
     "name": "Proiezione ortogonale di un punto",
@@ -1244,7 +1046,7 @@
   },
   {
     "id": "custom-1785931800006",
-    "code": "G3-D-00AA83",
+    "code": "G3-D-DISPUN",
     "type": "definition",
     "chapter": "G3",
     "name": "Distanza di un punto da una retta",
@@ -1255,7 +1057,7 @@
   },
   {
     "id": "custom-1785931800007",
-    "code": "G3-D-3FE6A5",
+    "code": "G3-D-PROSEG",
     "type": "definition",
     "chapter": "G3",
     "name": "Proiezione ortogonale di un segmento",
@@ -1266,7 +1068,7 @@
   },
   {
     "id": "custom-1785931650000",
-    "code": "G2-T-9E7BF1",
+    "code": "G2-T-RELTRI",
     "type": "theorem",
     "chapter": "G2",
     "name": "Le relazioni fra i lati di un triangolo",
@@ -1277,7 +1079,7 @@
   },
   {
     "id": "custom-1785931660000",
-    "code": "G2-T-4287D3",
+    "code": "G2-T-DUELAT",
     "type": "theorem",
     "chapter": "G2",
     "name": "I triangoli con due lati congruenti e l'angolo compreso disuguale",
@@ -1288,7 +1090,7 @@
   },
   {
     "id": "custom-1785931418297",
-    "code": "G2-T-FED42A",
+    "code": "G2-T-VOWFNM",
     "type": "theorem",
     "chapter": "G2",
     "name": "inverso del teorema della relazione fra un lato maggiore e un angolo maggiore",
@@ -1299,7 +1101,7 @@
   },
   {
     "id": "custom-1785931320000",
-    "code": "G2-T-D8F00E",
+    "code": "G2-T-CP0BUP",
     "type": "theorem",
     "chapter": "G2",
     "name": "La relazione fra lato maggiore e angolo maggiore",
@@ -1310,7 +1112,7 @@
   },
   {
     "id": "custom-1785931150000",
-    "code": "G2-T-C75BE6",
+    "code": "G2-T-NOJQH0",
     "type": "theorem",
     "chapter": "G2",
     "name": "Il teorema dell'angolo esterno (maggiore)",
@@ -1321,7 +1123,7 @@
   },
   {
     "id": "custom-1785930944000",
-    "code": "G2-T-E93AA6",
+    "code": "G2-T-74OIDD",
     "type": "theorem",
     "chapter": "G2",
     "name": "Terzo criterio di congruenza",
@@ -1332,7 +1134,7 @@
   },
   {
     "id": "custom-1785930615440",
-    "code": "G2-T-4C4B3E",
+    "code": "G2-T-R8KN1W",
     "type": "theorem",
     "chapter": "G2",
     "name": "la bisettrice del triangolo isoscele",
@@ -1343,7 +1145,7 @@
   },
   {
     "id": "custom-1785930116719",
-    "code": "G2-T-53BD04",
+    "code": "G2-T-UVR671",
     "type": "theorem",
     "chapter": "G2",
     "name": "inverso del teorema del triangolo isoscele",
@@ -1357,7 +1159,7 @@
   },
   {
     "id": "custom-1785929525746",
-    "code": "G2-T-176D77",
+    "code": "G2-T-GBT8ZH",
     "type": "theorem",
     "chapter": "G2",
     "name": "teorema del triangolo isoscele",
@@ -1368,7 +1170,7 @@
   },
   {
     "id": "custom-1785917087356",
-    "code": "G2-T-939331",
+    "code": "G2-T-5V2P8S",
     "type": "theorem",
     "chapter": "G2",
     "name": "secondo criterio di congruenza dei triangoli",
@@ -1381,7 +1183,7 @@
   },
   {
     "id": "custom-1785916405021",
-    "code": "G2-T-D17244",
+    "code": "G2-T-BAFTBF",
     "type": "theorem",
     "chapter": "G2",
     "name": "Primo criterio di congruenza dei triangoli (postulato)",
@@ -1392,7 +1194,7 @@
   },
   {
     "id": "custom-1785916280243",
-    "code": "G2-D-BFBCA0",
+    "code": "G2-D-IQD9UH",
     "type": "definition",
     "chapter": "G2",
     "name": "La classificazione dei triangoli rispetto agli angoli",
@@ -1403,7 +1205,7 @@
   },
   {
     "id": "custom-1785916183811",
-    "code": "G2-D-22EDBE",
+    "code": "G2-D-OKRNFL",
     "type": "definition",
     "chapter": "G2",
     "name": "La classificazione dei triangoli rispetto ai lati",
@@ -1414,7 +1216,7 @@
   },
   {
     "id": "custom-1785915755643",
-    "code": "G2-D-8B2911",
+    "code": "G2-D-FOWLE0",
     "type": "definition",
     "chapter": "G2",
     "name": "altezza relativa a un lato",
@@ -1425,7 +1227,7 @@
   },
   {
     "id": "custom-1785915707444",
-    "code": "G2-D-C5A096",
+    "code": "G2-D-8PHHFI",
     "type": "definition",
     "chapter": "G2",
     "name": "mediana relativa a un lato",
@@ -1436,7 +1238,7 @@
   },
   {
     "id": "custom-1785915642444",
-    "code": "G1-D-D65078",
+    "code": "G1-D-0S4MCV",
     "type": "definition",
     "chapter": "G1",
     "name": "bisettrice (nei triangoli)",
@@ -1447,7 +1249,7 @@
   },
   {
     "id": "custom-1785915561511",
-    "code": "G2-D-173D45",
+    "code": "G2-D-FLZJXA",
     "type": "definition",
     "chapter": "G2",
     "name": "triangolo",
@@ -1458,7 +1260,7 @@
   },
   {
     "id": "custom-1785915484677",
-    "code": "G1-D-41B60E",
+    "code": "G1-D-BB6Z38",
     "type": "definition",
     "chapter": "G1",
     "name": "ampiezza di un angolo",
@@ -1469,7 +1271,7 @@
   },
   {
     "id": "custom-1785915461677",
-    "code": "G1-D-01B802",
+    "code": "G1-D-Z5S3IL",
     "type": "definition",
     "chapter": "G1",
     "name": "distanza fra 2 punti",
@@ -1480,7 +1282,7 @@
   },
   {
     "id": "custom-1785915426294",
-    "code": "G1-D-E618FE",
+    "code": "G1-D-RV3R4K",
     "type": "definition",
     "chapter": "G1",
     "name": "lunghezza di un segmento",
@@ -1491,7 +1293,7 @@
   },
   {
     "id": "custom-1785915375760",
-    "code": "G1-T-BA1227",
+    "code": "G1-T-WDU6RH",
     "type": "theorem",
     "chapter": "G1",
     "name": "teorema degli angoli opposti al vertice",
@@ -1504,7 +1306,7 @@
   },
   {
     "id": "custom-1785915129377",
-    "code": "G1-D-D9305D",
+    "code": "G1-D-47BZQZ",
     "type": "definition",
     "chapter": "G1",
     "name": "angoli opposti al vertice",
@@ -1515,7 +1317,7 @@
   },
   {
     "id": "custom-1785913882780",
-    "code": "G1-T-F54CED",
+    "code": "G1-T-HSSIB1",
     "type": "theorem",
     "chapter": "G1",
     "name": "Angoli complementari di uno stesso angolo",
@@ -1528,7 +1330,7 @@
   },
   {
     "id": "custom-1785913390701",
-    "code": "G1-D-753C94",
+    "code": "G1-D-XRAAZ9",
     "type": "definition",
     "chapter": "G1",
     "name": "angoli complementari, supplementari ed esplementari",
@@ -1539,7 +1341,7 @@
   },
   {
     "id": "custom-1785913334418",
-    "code": "G1-D-E417D3",
+    "code": "G1-D-F1ZFZ4",
     "type": "definition",
     "chapter": "G1",
     "name": "angoli retti, acuti, ottusi",
@@ -1550,7 +1352,7 @@
   },
   {
     "id": "custom-1785779570200",
-    "code": "G1-D-C8807D",
+    "code": "G1-D-54MTH7",
     "type": "definition",
     "chapter": "G1",
     "name": "punto medio di un segmento",
@@ -1561,7 +1363,7 @@
   },
   {
     "id": "custom-1785779408112",
-    "code": "G1-D-56871A",
+    "code": "G1-D-QCKG7B",
     "type": "definition",
     "chapter": "G1",
     "name": "poligono",
@@ -1572,7 +1374,7 @@
   },
   {
     "id": "custom-1785778921900",
-    "code": "G1-D-BBEF50",
+    "code": "G1-D-G8ZKCD",
     "type": "definition",
     "chapter": "G1",
     "name": "angolo",
@@ -1583,7 +1385,7 @@
   },
   {
     "id": "custom-1785778702416",
-    "code": "G1-D-CF7131",
+    "code": "G1-D-FS1NMO",
     "type": "definition",
     "chapter": "G1",
     "name": "figure concave e convesse",
@@ -1594,7 +1396,7 @@
   },
   {
     "id": "custom-1785777365350",
-    "code": "G1-D-17AB1A",
+    "code": "G1-D-F7VFQL",
     "type": "definition",
     "chapter": "G1",
     "name": "semipiano",
@@ -1607,7 +1409,7 @@
   },
   {
     "id": "custom-1785777180270",
-    "code": "G1-D-6EBBCE",
+    "code": "G1-D-3VLBIX",
     "type": "definition",
     "chapter": "G1",
     "name": "poligonale",
@@ -1618,7 +1420,7 @@
   },
   {
     "id": "custom-1785777097621",
-    "code": "G1-D-955AE7",
+    "code": "G1-D-2G945B",
     "type": "definition",
     "chapter": "G1",
     "name": "segmenti consecutivi e adiacenti",
@@ -1629,7 +1431,7 @@
   },
   {
     "id": "custom-1785777058422",
-    "code": "G1-D-5EAB4C",
+    "code": "G1-D-H0YMPR",
     "type": "definition",
     "chapter": "G1",
     "name": "segmento",
@@ -1640,7 +1442,7 @@
   },
   {
     "id": "custom-1785776716644",
-    "code": "G1-D-89706A",
+    "code": "G1-D-3JXTNS",
     "type": "definition",
     "chapter": "G1",
     "name": "semiretta",
@@ -1649,4 +1451,4 @@
     "notes": "",
     "images": []
   }
-]
+];
