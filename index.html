@@ -144,8 +144,8 @@
     // SUPABASE CLIENT HELPER
     const getSupabaseClient = () => {
       try {
-        const url = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) || window.VITE_SUPABASE_URL || localStorage.getItem('VITE_SUPABASE_URL');
-        const key = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_ANON_KEY) || window.VITE_SUPABASE_ANON_KEY || localStorage.getItem('VITE_SUPABASE_ANON_KEY');
+        const url = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) || window.VITE_SUPABASE_URL || localStorage.getItem('VITE_SUPABASE_URL') || "https://ybpvdijjxrtarhkkqptt.supabase.co";
+        const key = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_ANON_KEY) || window.VITE_SUPABASE_ANON_KEY || localStorage.getItem('VITE_SUPABASE_ANON_KEY') || "sb_publishable_MCO5-bhukiy1pjoUotfKDg_mbfUxItY";
         if (window.supabase && url && key) {
           return window.supabase.createClient(url, key);
         }
