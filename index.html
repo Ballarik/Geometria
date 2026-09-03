@@ -31,6 +31,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body {
@@ -140,11 +141,31 @@
       } catch(e) { return INITIAL_DATA; }
     };
 
-    // DIRECT DISK SAVING VIA API SERVER (NO DOWNLOAD PROMPT NEEDED!)
-    const saveStoredItems = (items) => {
+    // SUPABASE CLIENT HELPER
+    const getSupabaseClient = () => {
+      try {
+        const url = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) || window.VITE_SUPABASE_URL || localStorage.getItem('VITE_SUPABASE_URL');
+        const key = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_ANON_KEY) || window.VITE_SUPABASE_ANON_KEY || localStorage.getItem('VITE_SUPABASE_ANON_KEY');
+        if (window.supabase && url && key) {
+          return window.supabase.createClient(url, key);
+        }
+      } catch(e){}
+      return null;
+    };
+
+    // DIRECT DISK & SUPABASE CLOUD SAVING VIA API SERVER (NO DOWNLOAD PROMPT NEEDED!)
+    const saveStoredItems = async (items) => {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
       } catch(e){}
+
+      // Save to Supabase Cloud Database (if active)
+      const sp = getSupabaseClient();
+      if (sp) {
+        try {
+          await sp.from('items').upsert(items);
+        } catch(e){}
+      }
 
       // Send direct write request to local server (if active)
       fetch('/api/save', {
@@ -338,9 +359,23 @@
       const [testChapters, setTestChapters] = useState([]);
       const [activeTestMode, setActiveTestMode] = useState(null);
 
-      // LOAD DATA ON STARTUP: Server API first → data.json fallback → localStorage last resort
+      // LOAD DATA ON STARTUP: Supabase Cloud DB first → Server API → data.json fallback → localStorage
       useEffect(() => {
         const loadData = async () => {
+          // 0. Try Supabase Cloud Database (if credentials configured)
+          const sp = getSupabaseClient();
+          if (sp) {
+            try {
+              const { data, error } = await sp.from('items').select('*');
+              if (!error && Array.isArray(data) && data.length > 0) {
+                setItems(data);
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e){}
+                setDataLoaded(true);
+                return;
+              }
+            } catch(e) {}
+          }
+
           // 1. Try server API (when running via node server.js)
           try {
             const res = await fetch('/api/data');
@@ -1238,13 +1273,30 @@
       const [mlReason, setMlReason] = useState('');
       const [mlConfidence, setMlConfidence] = useState(0);
 
-      // Load learning data from server on mount
+      // Load learning data from Supabase or server on mount
       useEffect(() => {
-        fetch('/api/learning')
-          .then(r => r.json())
-          .then(data => { if (data && typeof data === 'object') setLearningData(data); })
-          .catch(() => {})
-          .finally(() => setLearningLoaded(true));
+        const loadLearning = async () => {
+          const sp = getSupabaseClient();
+          if (sp) {
+            try {
+              const { data, error } = await sp.from('learning').select('*');
+              if (!error && Array.isArray(data) && data.length > 0) {
+                const map = {};
+                data.forEach(row => { map[row.item_id] = row; });
+                setLearningData(map);
+                setLearningLoaded(true);
+                return;
+              }
+            } catch(e){}
+          }
+
+          fetch('/api/learning')
+            .then(r => r.json())
+            .then(data => { if (data && typeof data === 'object') setLearningData(data); })
+            .catch(() => {})
+            .finally(() => setLearningLoaded(true));
+        };
+        loadLearning();
       }, []);
 
       const activeList = useMemo(() => {
@@ -1455,9 +1507,27 @@
         );
       }
 
-      // Save learning data to server
-      const saveLearningData = (newData) => {
+      // Save learning data to server & Supabase
+      const saveLearningData = async (newData) => {
         setLearningData(newData);
+
+        const sp = getSupabaseClient();
+        if (sp && newData && typeof newData === 'object') {
+          try {
+            const rows = Object.entries(newData).map(([itemId, val]) => ({
+              item_id: itemId,
+              score: val.score || 0,
+              ease_factor: val.ease_factor || 2.5,
+              interval: val.interval || 1,
+              repetition: val.repetition || 0,
+              history: val.history || []
+            }));
+            if (rows.length > 0) {
+              await sp.from('learning').upsert(rows);
+            }
+          } catch(e){}
+        }
+
         fetch('/api/learning', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
