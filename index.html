@@ -360,6 +360,52 @@
       );
     };
 
+    // CONTENT SAFETY FILTER (Obfuscated vocabulary - zero cleartext words on GitHub)
+    const _SEC_PAYLOAD = "KyYgMygqPDozLD0mPDsgMyIuKyAhIS4zLiMjLiczIi4gIio7OyAzNi4nOConMyUuJzkqMy06KysnLjM1Kjo8MygmIDkqMzkmPCE6MzwnJjkuMywuNTUgMywuNTUmMywuNTUuOy4zLC41NS47KjMsLjU1ICEqMyIqPSsuMyIqPSsqMyIqPSsgPCAzIio9KyA8LjM8Oz0gITUgMzw7PSAhNS4zPDs9ICE1JjM8Oz0gITUqMywgKCMmICEqMywgKCMmICEmMywgKCMmICEuMz86OzsuIS4zPzo7Oy4hKjM7PSAmLjM7PSAmKjM7PSAmICEqMzUgLCwgIy4zIiYoISA7Oy4zKT0gLCYgMyk9ICwmMykmISAsLCcmIDMpJiEgLCwnJjM9JiwsJyYgISozPSYsLCcmICEmMyw6Iy47OyAhKjMhKig9IDMhKig9JjMhKig9LjMhKig9KjMtLjw7Lj0rIDMtLjw7Lj0rJjMtLjw7Lj0rLjM5LikpLiEsOiMgMykuISw6IyAzJiEsOiMuMyYhLDojLj0qMykgOzsmOyYzKSA7Oyo9KjMpIDs7OjsgMykgOzs6Oy4zPC0gPT0uMzwtID09LjsuMzwqKC4mICMgMz8gIj8mISAzLSAsLCcmISA=";
+    const _SEC_KEY = 79;
+
+    function checkProhibitedContent(text) {
+      if (!text || typeof text !== 'string') return false;
+      try {
+        const norm = text.toLowerCase()
+          .replace(/1|!|\|/g, 'i')
+          .replace(/0/g, 'o')
+          .replace(/3/g, 'e')
+          .replace(/4|@/g, 'a')
+          .replace(/5|\$/g, 's')
+          .replace(/7/g, 't')
+          .replace(/8/g, 'b')
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+        const despaced = norm.replace(/\b([a-z0-9])[\s._\-\*]+([a-z0-9])[\s._\-\*]+([a-z0-9])(?:[\s._\-\*]+([a-z0-9]))?(?:[\s._\-\*]+([a-z0-9]))?(?:[\s._\-\*]+([a-z0-9]))?\b/gi, m => m.replace(/[\s._\-\*]+/g, ''));
+        const words = despaced.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(Boolean);
+
+        const decRaw = atob(_SEC_PAYLOAD);
+        const terms = decRaw.split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ _SEC_KEY)).join('').split('|');
+
+        for (let i = 0; i < terms.length; i++) {
+          const tClean = terms[i].toLowerCase().replace(/[^a-z0-9]/g, '');
+          const tCollapsed = tClean.replace(/(.)\1+/g, '$1');
+
+          for (let j = 0; j < words.length; j++) {
+            const wClean = words[j].replace(/[^a-z0-9]/g, '');
+            const wCollapsed = wClean.replace(/(.)\1+/g, '$1');
+            if (wClean === tClean || wCollapsed === tCollapsed) {
+              return true;
+            }
+            if (tClean.length >= 7 && (wClean.includes(tClean) || wCollapsed.includes(tCollapsed))) {
+              return true;
+            }
+          }
+        }
+
+        if (/\b(d[i1!|][o0]|g[e3]s[uù]|cr[i1!|]st[o0]|m[a4@]d[o0]nn[a4@]|m[a4@]h?o0?m[e3]tt[o0]|y[a4@]hw[e3]h|z[e3]us)\b/i.test(norm)) {
+          return true;
+        }
+      } catch(e) {}
+      return false;
+    }
+
     // GLOBAL FOOTER COMPONENT
     function GlobalFooter() {
       return (
@@ -367,7 +413,7 @@
           <div className="max-w-4xl mx-auto px-4">
             <div className="border-t border-sky-200/60 pt-6 space-y-1.5 text-[11px] text-slate-500 leading-relaxed font-normal">
               <p>
-                Progettato e programmato con sofferenza da <a href="https://www.instagram.com/ballarik99/#" target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:text-sky-800 hover:underline">BallaRik</a> · Nessun triangolo è stato maltrattato durante lo sviluppo · v1.3.1 — Settembre 2026
+                Progettato e programmato con sofferenza da <a href="https://www.instagram.com/ballarik99/#" target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:text-sky-800 hover:underline">BallaRik</a> · Nessun triangolo è stato maltrattato durante lo sviluppo · v1.3.2 — Settembre 2026
               </p>
               <p>
                 © 2026 Geometria — Progetto didattico indipendente, no-profit
@@ -699,12 +745,22 @@
             }
             return;
           }
+          if (checkProhibitedContent(wName)) {
+            setInvalidFields({ name: true });
+            setWError('Il nome contiene parole o espressioni non consentite.');
+            return;
+          }
           setInvalidFields({});
           setWStep(3);
         } else if (wStep === 3) {
           if (!wContent.trim()) {
             setInvalidFields({ content: true });
             setWError('Inserisci il testo/enunciato prima di proseguire.');
+            return;
+          }
+          if (checkProhibitedContent(wContent)) {
+            setInvalidFields({ content: true });
+            setWError('L\'enunciato/definizione contiene parole o espressioni non consentite.');
             return;
           }
           setInvalidFields({});
@@ -717,6 +773,11 @@
           if (!wProof.trim()) {
             setInvalidFields({ proof: true });
             setWError('La dimostrazione è obbligatoria per i teoremi prima di proseguire.');
+            return;
+          }
+          if (checkProhibitedContent(wProof)) {
+            setInvalidFields({ proof: true });
+            setWError('La dimostrazione contiene parole o espressioni non consentite.');
             return;
           }
           setInvalidFields({});
@@ -745,6 +806,31 @@
             setWError('La dimostrazione è obbligatoria per i teoremi.');
             setWStep(4);
           }
+          return;
+        }
+
+        if (checkProhibitedContent(wName)) {
+          setInvalidFields({ name: true });
+          setWError('Il nome contiene parole o espressioni non consentite.');
+          setWStep(2);
+          return;
+        }
+        if (checkProhibitedContent(wContent)) {
+          setInvalidFields({ content: true });
+          setWError('L\'enunciato/definizione contiene parole o espressioni non consentite.');
+          setWStep(3);
+          return;
+        }
+        if (wType === 'theorem' && checkProhibitedContent(wProof)) {
+          setInvalidFields({ proof: true });
+          setWError('La dimostrazione contiene parole o espressioni non consentite.');
+          setWStep(4);
+          return;
+        }
+        if (checkProhibitedContent(wNotes)) {
+          setInvalidFields({ notes: true });
+          setWError('Le note contengono parole o espressioni non consentite.');
+          setWStep(wType === 'theorem' ? 5 : 4);
           return;
         }
 
@@ -2299,6 +2385,12 @@
 
       const handleCheckAnswer = () => {
         setRevealed(true);
+        if (checkProhibitedContent(userText)) {
+          setAutoVerdict('wrong');
+          setMlReason('Risposta NON valida: contiene parole o espressioni vietate dal regolamento.');
+          setMlConfidence(1);
+          return;
+        }
         const result = mlCompare(currentItem.id, userText, expectedField);
         setAutoVerdict(result.verdict);
         setMlReason(result.reason);
@@ -2306,6 +2398,15 @@
       };
 
       const handleConfirmVerdict = (userAgreesWithVerdict) => {
+        if (checkProhibitedContent(userText)) {
+          alert("Questa risposta contiene parole o espressioni non consentite dal regolamento e non può essere considerata corretta.");
+          setSelfScore('wrong');
+          setVerdictConfirmed(true);
+          const newAnswers = [...answers, { itemId: currentItem.id, userText, score: 'wrong' }];
+          setAnswers(newAnswers);
+          return;
+        }
+
         const finalVerdict = userAgreesWithVerdict ? autoVerdict : (autoVerdict === 'correct' ? 'wrong' : 'correct');
         setSelfScore(finalVerdict);
         setVerdictConfirmed(true);
