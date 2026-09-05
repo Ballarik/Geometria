@@ -636,12 +636,18 @@
         return () => window.removeEventListener('paste', handlePaste);
       }, [isWizardOpen]);
 
-      const handleDeleteItem = (id) => {
+      const handleDeleteItem = async (id) => {
         if (confirm('Eliminare questo elemento dal database?')) {
           const updated = items.filter(i => i.id !== id);
           setItems(updated);
           saveStoredItems(updated);
           if (selectedItem && selectedItem.id === id) setSelectedItem(null);
+
+          // Delete from Supabase Cloud Database
+          const sp = getSupabaseClient();
+          if (sp) {
+            try { await sp.from('items').delete().eq('id', id); } catch(e){}
+          }
         }
       };
 
