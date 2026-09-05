@@ -188,9 +188,79 @@
       );
     }
 
+    function SiteModal({ config, onClose }) {
+      if (!config) return null;
+      return (
+        <div
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
+          onClick={onClose}
+        >
+          <div
+            className="bg-white border border-sky-300 rounded-xl max-w-md w-full flex flex-col p-6 shadow-2xl space-y-4 text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* HEADER */}
+            <div className="flex justify-between items-start border-b border-sky-100 pb-3">
+              <div>
+                {config.category && (
+                  <span className="text-[10px] font-extrabold text-sky-700 uppercase tracking-wider block mb-0.5">
+                    {config.category}
+                  </span>
+                )}
+                <h3 className="text-base sm:text-lg font-extrabold text-[#0b192c]">
+                  {config.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-slate-400 hover:text-slate-700 font-bold text-lg cursor-pointer px-1 -mt-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* BODY */}
+            <div className="space-y-2.5 text-xs text-slate-700 leading-relaxed">
+              {config.message && <p>{config.message}</p>}
+              {config.paragraphs && config.paragraphs.map((p, idx) => (
+                <p
+                  key={idx}
+                  className={idx === 1 ? "font-semibold text-sky-950 bg-sky-50 border border-sky-200 p-2.5 rounded-lg" : ""}
+                >
+                  {p}
+                </p>
+              ))}
+            </div>
+
+            {/* ACTIONS */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-sky-100">
+              {config.type === 'confirm' && (
+                <button
+                  type="button"
+                  onClick={config.onCancel || onClose}
+                  className="px-4 py-2 border border-sky-300 text-sky-900 rounded-lg text-xs font-bold hover:bg-sky-50 transition-colors"
+                >
+                  {config.cancelText || 'Annulla'}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={config.onConfirm || onClose}
+                className="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+              >
+                {config.confirmText || 'OK'}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     function TestTeoremiApp() {
       const [items, setItems] = useState([]);
       const [dataLoaded, setDataLoaded] = useState(false);
+      const [modalConfig, setModalConfig] = useState(null);
       const [testChapters, setTestChapters] = useState(() => {
         try {
           const saved = localStorage.getItem('geometria_test_chapters');
@@ -425,10 +495,19 @@
 
       const handleConfirmVerdict = (userAgreesWithVerdict) => {
         if (checkProhibitedContent(userText)) {
-          alert("Questa risposta contiene parole o espressioni non consentite dal regolamento e non può essere considerata corretta.");
-          setSelfScore('wrong');
-          setVerdictConfirmed(true);
-          setAnswers([...answers, { itemId: currentItem.id, userText, score: 'wrong' }]);
+          setModalConfig({
+            type: 'alert',
+            category: 'REGOLAMENTO CONTENUTI',
+            title: 'Risposta Non Consentita',
+            message: 'Questa risposta contiene parole o espressioni non consentite dal regolamento e non può essere considerata corretta.',
+            confirmText: 'Ho capito',
+            onConfirm: () => {
+              setModalConfig(null);
+              setSelfScore('wrong');
+              setVerdictConfirmed(true);
+              setAnswers([...answers, { itemId: currentItem.id, userText, score: 'wrong' }]);
+            }
+          });
           return;
         }
 
@@ -732,6 +811,7 @@
             )}
           </main>
 
+          <SiteModal config={modalConfig} onClose={() => setModalConfig(null)} />
           <GlobalFooter />
         </div>
       );

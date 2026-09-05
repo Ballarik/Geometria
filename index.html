@@ -733,12 +733,82 @@
       );
     }
 
+    function SiteModal({ config, onClose }) {
+      if (!config) return null;
+      return (
+        <div
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
+          onClick={onClose}
+        >
+          <div
+            className="bg-white border border-sky-300 rounded-xl max-w-md w-full flex flex-col p-6 shadow-2xl space-y-4 text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* HEADER */}
+            <div className="flex justify-between items-start border-b border-sky-100 pb-3">
+              <div>
+                {config.category && (
+                  <span className="text-[10px] font-extrabold text-sky-700 uppercase tracking-wider block mb-0.5">
+                    {config.category}
+                  </span>
+                )}
+                <h3 className="text-base sm:text-lg font-extrabold text-[#0b192c]">
+                  {config.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-slate-400 hover:text-slate-700 font-bold text-lg cursor-pointer px-1 -mt-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* BODY */}
+            <div className="space-y-2.5 text-xs text-slate-700 leading-relaxed">
+              {config.message && <p>{config.message}</p>}
+              {config.paragraphs && config.paragraphs.map((p, idx) => (
+                <p
+                  key={idx}
+                  className={idx === 1 ? "font-semibold text-sky-950 bg-sky-50 border border-sky-200 p-2.5 rounded-lg" : ""}
+                >
+                  {p}
+                </p>
+              ))}
+            </div>
+
+            {/* ACTIONS */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-sky-100">
+              {config.type === 'confirm' && (
+                <button
+                  type="button"
+                  onClick={config.onCancel || onClose}
+                  className="px-4 py-2 border border-sky-300 text-sky-900 rounded-lg text-xs font-bold hover:bg-sky-50 transition-colors"
+                >
+                  {config.cancelText || 'Annulla'}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={config.onConfirm || onClose}
+                className="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+              >
+                {config.confirmText || 'OK'}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     // MAIN APP COMPONENT
     function App() {
       const [items, setItems] = useState([]);
       const [isWizardOpen, setIsWizardOpen] = useState(false);
       const [editingItemId, setEditingItemId] = useState(null);
       const [dataLoaded, setDataLoaded] = useState(false);
+      const [modalConfig, setModalConfig] = useState(null);
       
       // Catalog filters
       const [typeFilter, setTypeFilter] = useState('all');
@@ -879,31 +949,54 @@
       }, [items, typeFilter, chapterFilter, search]);
 
       const handleOpenCreate = () => {
-        const confirmed = confirm(
-          "⚠️ NUOVO INSERIMENTO:\n\nConfermi di voler aggiungere un nuovo elemento al database?\n\nTi chiediamo di inserire solo informazioni accurate, verificate e pertinenti alla geometria.\n\nContinuando accetti e sei l'unico responsabile di quello che fai."
-        );
-        if (!confirmed) return;
-        resetWizard();
-        setIsWizardOpen(true);
+        setModalConfig({
+          type: 'confirm',
+          category: 'LINEE GUIDA E RESPONSABILITÀ',
+          title: 'Nuovo Inserimento',
+          paragraphs: [
+            'Confermi di voler aggiungere un nuovo elemento al database?',
+            'Ti chiediamo di inserire solo informazioni accurate, verificate e pertinenti alla geometria.',
+            'Continuando accetti e confermi la correttezza dei contenuti didattici.'
+          ],
+          confirmText: 'Continua e Inserisci',
+          cancelText: 'Annulla',
+          onConfirm: () => {
+            setModalConfig(null);
+            resetWizard();
+            setIsWizardOpen(true);
+          },
+          onCancel: () => setModalConfig(null)
+        });
       };
 
       const handleOpenEdit = (item) => {
-        const confirmed = confirm(
-          "⚠️ MODIFICA CONTENUTO:\n\nConfermi di voler modificare questo elemento per migliorarne o correggerne i contenuti?\n\nTi chiediamo di mantenere il database accurato e di inserire solo informazioni verificate e pertinenti.\n\nContinuando accetti e sei l'unico responsabile di quello che fai."
-        );
-        if (!confirmed) return;
-
-        setEditingItemId(item.id);
-        setWType(item.type);
-        setWChapter(item.chapter || 'N');
-        setWName(item.name);
-        setWContent(item.content);
-        setWProof(item.proof || '');
-        setWNotes(item.notes || '');
-        setWImages(item.images || []);
-        setWError(''); setInvalidFields({});
-        setWStep(1);
-        setIsWizardOpen(true);
+        setModalConfig({
+          type: 'confirm',
+          category: 'LINEE GUIDA E RESPONSABILITÀ',
+          title: 'Modifica Contenuto',
+          paragraphs: [
+            'Confermi di voler modificare questo elemento per migliorarne o correggerne i contenuti?',
+            'Ti chiediamo di mantenere il database accurato e di inserire solo informazioni verificate e pertinenti.',
+            'Continuando accetti e confermi la correttezza dei contenuti didattici.'
+          ],
+          confirmText: 'Continua e Modifica',
+          cancelText: 'Annulla',
+          onConfirm: () => {
+            setModalConfig(null);
+            setEditingItemId(item.id);
+            setWType(item.type);
+            setWChapter(item.chapter || 'N');
+            setWName(item.name);
+            setWContent(item.content);
+            setWProof(item.proof || '');
+            setWNotes(item.notes || '');
+            setWImages(item.images || []);
+            setWError(''); setInvalidFields({});
+            setWStep(1);
+            setIsWizardOpen(true);
+          },
+          onCancel: () => setModalConfig(null)
+        });
       };
 
       const validateAndNextStep = () => {
@@ -1661,6 +1754,9 @@
             actionTitle={authModal.actionTitle}
             actionDescription={authModal.actionDescription}
           />
+
+          {/* SITE NOTIFICATION & CONFIRMATION POPUP */}
+          <SiteModal config={modalConfig} onClose={() => setModalConfig(null)} />
 
           {/* GLOBAL FOOTER */}
           <GlobalFooter />
