@@ -10,6 +10,7 @@
     { "source": "/archivio", "destination": "/machine-learning.html" },
     { "source": "/ml", "destination": "/machine-learning.html" },
     { "source": "/termini", "destination": "/termini.html" },
-    { "source": "/termini-di-utilizzo", "destination": "/termini.html" }
+    { "source": "/termini-di-utilizzo", "destination": "/termini.html" },
+    { "source": "/404", "destination": "/404.html" }
   ]
 }

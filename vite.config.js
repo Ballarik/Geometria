@@ -36,6 +36,8 @@ export default defineConfig(({ mode }) => {
               req.url = '/machine-learning.html';
             } else if (url === '/termini' || url === '/termini-di-utilizzo') {
               req.url = '/termini.html';
+            } else if (url === '/404') {
+              req.url = '/404.html';
             }
             next();
           });
@@ -53,6 +55,8 @@ export default defineConfig(({ mode }) => {
               req.url = '/machine-learning.html';
             } else if (url === '/termini' || url === '/termini-di-utilizzo') {
               req.url = '/termini.html';
+            } else if (url === '/404') {
+              req.url = '/404.html';
             }
             next();
           });
@@ -68,6 +72,7 @@ export default defineConfig(({ mode }) => {
           testTeoremi: resolve(__dirname, 'test-teoremi.html'),
           machineLearning: resolve(__dirname, 'machine-learning.html'),
           termini: resolve(__dirname, 'termini.html'),
+          notfound: resolve(__dirname, '404.html'),
         }
       }
     },
