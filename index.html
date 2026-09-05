@@ -428,8 +428,7 @@
             );
             if (!isTyping && !isWizardOpen) {
               e.preventDefault();
-              resetWizard();
-              setIsWizardOpen(true);
+              handleOpenCreate();
             }
           }
         };
@@ -444,9 +443,9 @@
           if (typeFilter === 'definition' && item.type !== 'definition') return false;
           if (chapterFilter !== 'all' && item.chapter !== chapterFilter) return false;
           if (search.trim()) {
-            const q = search.toLowerCase();
-            const matchesName = item.name.toLowerCase().includes(q);
-            const matchesContent = item.content.toLowerCase().includes(q);
+            const q = search.toLowerCase().trim();
+            const matchesName = item.name && item.name.toLowerCase().includes(q);
+            const matchesContent = item.content && item.content.toLowerCase().includes(q);
             const matchesCode = item.code && item.code.toLowerCase().includes(q);
             if (!matchesName && !matchesContent && !matchesCode) return false;
           }
@@ -454,7 +453,21 @@
         });
       }, [items, typeFilter, chapterFilter, search]);
 
+      const handleOpenCreate = () => {
+        const confirmed = confirm(
+          "⚠️ NUOVO INSERIMENTO:\n\nConfermi di voler aggiungere un nuovo elemento al database?\n\nTi chiediamo di inserire solo informazioni accurate, verificate e pertinenti alla geometria.\n\nContinuando accetti e sei l'unico responsabile di quello che fai."
+        );
+        if (!confirmed) return;
+        resetWizard();
+        setIsWizardOpen(true);
+      };
+
       const handleOpenEdit = (item) => {
+        const confirmed = confirm(
+          "⚠️ MODIFICA CONTENUTO:\n\nConfermi di voler modificare questo elemento per migliorarne o correggerne i contenuti?\n\nTi chiediamo di mantenere il database accurato e di inserire solo informazioni verificate e pertinenti.\n\nContinuando accetti e sei l'unico responsabile di quello che fai."
+        );
+        if (!confirmed) return;
+
         setEditingItemId(item.id);
         setWType(item.type);
         setWChapter(item.chapter || 'N');
@@ -637,17 +650,20 @@
       }, [isWizardOpen]);
 
       const handleDeleteItem = async (id) => {
-        if (confirm('Eliminare questo elemento dal database?')) {
-          const updated = items.filter(i => i.id !== id);
-          setItems(updated);
-          saveStoredItems(updated);
-          if (selectedItem && selectedItem.id === id) setSelectedItem(null);
+        const confirmed = confirm(
+          "⚠️ ELIMINAZIONE CONTENUTO:\n\nConfermi di voler eliminare questo elemento dal database?\n\nTi chiediamo di mantenere il database accurato e di procedere solo se l'elemento è errato, duplicato o non conforme.\n\nContinuando accetti e sei l'unico responsabile di quello che fai."
+        );
+        if (!confirmed) return;
 
-          // Delete from Supabase Cloud Database
-          const sp = getSupabaseClient();
-          if (sp) {
-            try { await sp.from('items').delete().eq('id', id); } catch(e){}
-          }
+        const updated = items.filter(i => i.id !== id);
+        setItems(updated);
+        saveStoredItems(updated);
+        if (selectedItem && selectedItem.id === id) setSelectedItem(null);
+
+        // Delete from Supabase Cloud Database
+        const sp = getSupabaseClient();
+        if (sp) {
+          try { await sp.from('items').delete().eq('id', id); } catch(e){}
         }
       };
 
@@ -671,7 +687,7 @@
                   Consultazione
                 </button>
                 <button
-                  onClick={() => { resetWizard(); setIsWizardOpen(true); }}
+                  onClick={handleOpenCreate}
                   title="Scorciatoia tastiera: Premi 'N' quando sei nella Home"
                   className="px-3 py-1.5 rounded-md text-xs font-bold bg-sky-600 text-white hover:bg-sky-700 shadow-sm flex items-center gap-1"
                 >
@@ -736,7 +752,7 @@
                     Il database è vuoto. Clicca su <strong>"+ Nuovo Inserimento"</strong> (o premi il tasto <strong>N</strong> sulla tastiera) per inserire i tuoi teoremi e definizioni.
                   </p>
                   <button
-                    onClick={() => { resetWizard(); setIsWizardOpen(true); }}
+                    onClick={handleOpenCreate}
                     className="px-4 py-2 bg-sky-600 text-white font-bold text-xs rounded-md shadow-sm hover:bg-sky-700"
                   >
                     + Aggiungi un elemento (Tasto N)
