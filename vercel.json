@@ -1,6 +1,14 @@
 {
   "cleanUrls": true,
   "rewrites": [
+    { "source": "/test", "destination": "/test.html" },
+    { "source": "/test-definizioni", "destination": "/test-definizioni.html" },
+    { "source": "/test/definizioni", "destination": "/test-definizioni.html" },
+    { "source": "/test-teoremi", "destination": "/test-teoremi.html" },
+    { "source": "/test/teoremi", "destination": "/test-teoremi.html" },
+    { "source": "/machine-learning", "destination": "/machine-learning.html" },
+    { "source": "/archivio", "destination": "/machine-learning.html" },
+    { "source": "/ml", "destination": "/machine-learning.html" },
     { "source": "/termini", "destination": "/termini.html" },
     { "source": "/termini-di-utilizzo", "destination": "/termini.html" }
   ]

@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="it" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Definizioni - Geometria</title>
+  
+  <!-- Favicons & App Icons -->
+  <link rel="icon" href="/favicon.ico?v=1.6.0" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1.6.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=1.6.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=1.6.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1.6.0">
+  <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png?v=1.6.0">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg?v=1.6.0" color="#0ea5e9">
+  <meta name="apple-mobile-web-app-title" content="geometria">
+  <meta name="application-name" content="geometria">
+  <meta name="theme-color" content="#ffffff">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          animation: { 'fade-in': 'fadeIn 0.2s ease-out forwards' }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & KaTeX CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+
+  <!-- React 18, ReactDOM, Babel & KaTeX JS & Canvas Confetti & Supabase -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      background-color: #ffffff;
+      background-image: 
+        linear-gradient(to right, rgba(56, 189, 248, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(56, 189, 248, 0.15) 1px, transparent 1px);
+      background-size: 28px 28px;
+      color: #0b192c;
+    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #e0f2fe; }
+    ::-webkit-scrollbar-thumb { background: #7dd3fc; border-radius: 4px; }
+    .katex { color: #0b192c !important; font-size: 1.05em; }
+    .katex-display { margin: 0.5em 0; overflow-x: auto; }
+  </style>
+
+  <!-- Vercel Web Analytics -->
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="antialiased min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    const CHAPTERS = Array.from({ length: 16 }, (_, i) => `G${i + 1}`);
+    const STORAGE_KEY = 'geometria_db_main';
+
+    const _SEC_PAYLOAD = "KyYgMygqPDozLD0mPDsgMyIuKyAhIS4zLiMjLiczIi4gIio7OyAzNi4nOConMyUuJzkqMy06KysnLjM1Kjo8MygmIDkqMzkmPCE6MzwnJjkuMywuNTUgMywuNTUmMywuNTUuOy4zLC41NS47KjMsLjU1ICEqMyIqPSsuMyIqPSsqMyIqPSsgPCAzIio9KyA8LjM8Oz0gITUgMzw7PSAhNS4zPDs9ICE1JjM8Oz0gITUqMywgKCMmICEqMywgKCMmICEmMywgKCMmICEuMz86OzsuIS4zPzo7Oy4hKjM7PSAmLjM7PSAmKjM7PSAmICEqMzUgLCwgIy4zIiYoISA7Oy4zKT0gLCYgMyk9ICwmMykmISAsLCcmIDMpJiEgLCwnJjM9JiwsJyYgISozPSYsLCcmICEmMyw6Iy47OyAhKjMhKig9IDMhKig9JjMhKig9LjMhKig9KjMtLjw7Lj0rIDMtLjw7Lj0rJjMtLjw7Lj0rLjM5LikpLiEsOiMgMykuISw6IyAzJiEsOiMuMyYhLDojLj0qMykgOzsmOyYzKSA7Oyo9KjMpIDs7OjsgMykgOzs6Oy4zPC0gPT0uMzwtID09LjsuMzwqKC4mICMgMz8gIj8mISAzLSAsLCcmISA=";
+    const _SEC_KEY = 79;
+
+    function checkProhibitedContent(text) {
+      if (!text || typeof text !== 'string') return false;
+      try {
+        const norm = text.toLowerCase()
+          .replace(/1|!|\|/g, 'i')
+          .replace(/0/g, 'o')
+          .replace(/3/g, 'e')
+          .replace(/4|@/g, 'a')
+          .replace(/5|\$/g, 's')
+          .replace(/7/g, 't')
+          .replace(/8/g, 'b')
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+        const despaced = norm.replace(/\b([a-z0-9])[\s._\-\*]+([a-z0-9])[\s._\-\*]+([a-z0-9])(?:[\s._\-\*]+([a-z0-9]))?(?:[\s._\-\*]+([a-z0-9]))?(?:[\s._\-\*]+([a-z0-9]))?\b/gi, m => m.replace(/[\s._\-\*]+/g, ''));
+        const words = despaced.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(Boolean);
+
+        const decRaw = atob(_SEC_PAYLOAD);
+        const terms = decRaw.split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ _SEC_KEY)).join('').split('|');
+
+        for (let i = 0; i < terms.length; i++) {
+          const tClean = terms[i].toLowerCase().replace(/[^a-z0-9]/g, '');
+          const tCollapsed = tClean.replace(/(.)\1+/g, '$1');
+
+          for (let j = 0; j < words.length; j++) {
+            const wClean = words[j].replace(/[^a-z0-9]/g, '');
+            const wCollapsed = wClean.replace(/(.)\1+/g, '$1');
+            if (wClean === tClean || wCollapsed === tCollapsed) {
+              return true;
+            }
+            if (tClean.length >= 7 && (wClean.includes(tClean) || wCollapsed.includes(tCollapsed))) {
+              return true;
+            }
+          }
+        }
+
+        if (/\b(d[i1!|][o0]|g[e3]s[uù]|cr[i1!|]st[o0]|m[a4@]d[o0]nn[a4@]|m[a4@]h?o0?m[e3]tt[o0]|y[a4@]hw[e3]h|z[e3]us)\b/i.test(norm)) {
+          return true;
+        }
+      } catch(e) {}
+      return false;
+    }
+
+    const getSupabaseClient = () => {
+      try {
+        const url = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) || window.VITE_SUPABASE_URL || localStorage.getItem('VITE_SUPABASE_URL');
+        const key = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_ANON_KEY) || window.VITE_SUPABASE_ANON_KEY || localStorage.getItem('VITE_SUPABASE_ANON_KEY');
+        if (window.supabase && url && key) {
+          return window.supabase.createClient(url, key);
+        }
+      } catch(e){}
+      return null;
+    };
+
+    const MathRender = ({ content, className = '' }) => {
+      if (!content) return null;
+      const parseMath = (text) => {
+        const parts = [];
+        let lastIdx = 0;
+        const regex = /\$\$(.*?)\$\$|\$(.*?)\$/g;
+        let m;
+        while ((m = regex.exec(text)) !== null) {
+          if (m.index > lastIdx) parts.push({ type: 'text', value: text.substring(lastIdx, m.index) });
+          if (m[1] !== undefined) parts.push({ type: 'math', value: m[1], display: true });
+          else if (m[2] !== undefined) parts.push({ type: 'math', value: m[2], display: false });
+          lastIdx = regex.lastIndex;
+        }
+        if (lastIdx < text.length) parts.push({ type: 'text', value: text.substring(lastIdx) });
+        return parts;
+      };
+
+      return (
+        <div className={`whitespace-pre-wrap ${className}`}>
+          {parseMath(content).map((p, idx) => {
+            if (p.type === 'math') {
+              try {
+                const html = katex.renderToString(p.value, { displayMode: p.display, throwOnError: false });
+                return <span key={idx} dangerouslySetInnerHTML={{ __html: html }} />;
+              } catch(e) { return <code key={idx}>${p.value}$</code>; }
+            }
+            const formatted = p.value.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
+            return <span key={idx} dangerouslySetInnerHTML={{ __html: formatted }} />;
+          })}
+        </div>
+      );
+    };
+
+    function GlobalFooter() {
+      return (
+        <footer className="mt-16 pb-8 text-center">
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="border-t border-sky-200/60 pt-6 space-y-1.5 text-[11px] text-slate-500 leading-relaxed font-normal">
+              <p>
+                Progettato e programmato con sofferenza da <a href="https://www.instagram.com/ballarik99/#" target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:text-sky-800 hover:underline">BallaRik</a> · Nessun triangolo è stato maltrattato durante lo sviluppo · v1.6.0 — Settembre 2026
+              </p>
+              <p>
+                © 2026 Geometria — Progetto didattico indipendente, no-profit
+              </p>
+              <p>
+                Codice sorgente: licenza <a href="/LICENSE" target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:text-sky-800 hover:underline">MIT</a> · Contenuti didattici: licenza <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:text-sky-800 hover:underline">CC BY 4.0</a>
+              </p>
+              <p>
+                <a href="/termini" className="text-sky-600 hover:text-sky-800 hover:underline">Termini di Utilizzo</a>
+              </p>
+            </div>
+          </div>
+        </footer>
+      );
+    }
+
+    function TestDefinizioniApp() {
+      const [items, setItems] = useState([]);
+      const [dataLoaded, setDataLoaded] = useState(false);
+      const [testChapters, setTestChapters] = useState(() => {
+        try {
+          const saved = localStorage.getItem('geometria_test_chapters');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          }
+        } catch(e){}
+        return CHAPTERS;
+      });
+
+      const [learningData, setLearningData] = useState({});
+      const [currentIdx, setCurrentIdx] = useState(0);
+      const [userText, setUserText] = useState('');
+      const [revealed, setRevealed] = useState(false);
+      const [selfScore, setSelfScore] = useState(null);
+      const [answers, setAnswers] = useState([]);
+      const [showScore, setShowScore] = useState(false);
+      const [finalScore, setFinalScore] = useState({ correct: 0, total: 0 });
+      const [autoVerdict, setAutoVerdict] = useState(null);
+      const [verdictConfirmed, setVerdictConfirmed] = useState(false);
+      const [mlReason, setMlReason] = useState('');
+      const [mlConfidence, setMlConfidence] = useState(0);
+      const [showChapterSelector, setShowChapterSelector] = useState(false);
+
+      // Save chapters to localStorage
+      useEffect(() => {
+        try {
+          localStorage.setItem('geometria_test_chapters', JSON.stringify(testChapters));
+        } catch(e){}
+      }, [testChapters]);
+
+      // Load Items
+      useEffect(() => {
+        const loadData = async () => {
+          const sp = getSupabaseClient();
+          if (sp) {
+            try {
+              const { data, error } = await sp.from('items').select('*');
+              if (!error && Array.isArray(data) && data.length > 0) {
+                setItems(data);
+                setDataLoaded(true);
+                return;
+              }
+            } catch(e){}
+          }
+          try {
+            const res = await fetch('/api/data');
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+              setItems(data);
+              setDataLoaded(true);
+              return;
+            }
+          } catch(e){}
+          try {
+            const res = await fetch('./data.json');
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+              setItems(data);
+              setDataLoaded(true);
+              return;
+            }
+          } catch(e){}
+          try {
+            const local = localStorage.getItem(STORAGE_KEY);
+            if (local) setItems(JSON.parse(local));
+          } catch(e){}
+          setDataLoaded(true);
+        };
+        loadData();
+      }, []);
+
+      // Load Learning Data
+      useEffect(() => {
+        const loadLearning = async () => {
+          const sp = getSupabaseClient();
+          if (sp) {
+            try {
+              const { data, error } = await sp.from('learning').select('*');
+              if (!error && Array.isArray(data) && data.length > 0) {
+                const map = {};
+                data.forEach(row => {
+                  const h = row.history || {};
+                  map[row.item_id] = {
+                    score: row.score || 0,
+                    ease_factor: row.ease_factor || 2.5,
+                    interval: row.interval || 1,
+                    repetition: row.repetition || 0,
+                    accepted: Array.isArray(h.accepted) ? h.accepted : (Array.isArray(row.accepted) ? row.accepted : []),
+                    rejected: Array.isArray(h.rejected) ? h.rejected : (Array.isArray(row.rejected) ? row.rejected : []),
+                    threshold: typeof h.threshold === 'number' ? h.threshold : (typeof row.threshold === 'number' ? row.threshold : 0.75),
+                    history: Array.isArray(h.items) ? h.items : (Array.isArray(h) ? h : [])
+                  };
+                });
+                setLearningData(map);
+                return;
+              }
+            } catch(e){}
+          }
+          try {
+            const local = localStorage.getItem('geometria_learning');
+            if (local) {
+              const parsed = JSON.parse(local);
+              if (parsed && typeof parsed === 'object') setLearningData(parsed);
+            }
+          } catch(e){}
+          try {
+            const res = await fetch('/api/learning');
+            const data = await res.json();
+            if (data && typeof data === 'object') setLearningData(data);
+          } catch(e){}
+        };
+        loadLearning();
+      }, []);
+
+      // Save Learning Data
+      const saveLearningData = async (newData) => {
+        setLearningData(newData);
+        try {
+          localStorage.setItem('geometria_learning', JSON.stringify(newData));
+        } catch(e){}
+
+        const sp = getSupabaseClient();
+        if (sp && newData && typeof newData === 'object') {
+          try {
+            const rows = Object.entries(newData).map(([itemId, val]) => ({
+              item_id: itemId,
+              score: val.score || 0,
+              ease_factor: val.ease_factor || 2.5,
+              interval: val.interval || 1,
+              repetition: val.repetition || 0,
+              last_reviewed: new Date().toISOString(),
+              history: {
+                accepted: val.accepted || [],
+                rejected: val.rejected || [],
+                threshold: typeof val.threshold === 'number' ? val.threshold : 0.75,
+                items: val.history || []
+              }
+            }));
+            if (rows.length > 0) {
+              await sp.from('learning').upsert(rows);
+            }
+          } catch(e){}
+        }
+
+        fetch('/api/learning', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newData)
+        }).catch(() => {});
+      };
+
+      // Filter: only DEFINITIONS from active chapters
+      const activeList = useMemo(() => {
+        return items.filter(i => i.type === 'definition' && testChapters.includes(i.chapter));
+      }, [items, testChapters]);
+
+      const currentItem = activeList[currentIdx] || activeList[0];
+
+      // Comparison helpers
+      const normalizeText = (text) => {
+        return text
+          .toLowerCase()
+          .replace(/\$[^$]*\$/g, (match) => match.replace(/\\/g, '').replace(/[{}]/g, '').replace(/\s+/g, ''))
+          .replace(/[.,;:!?'"()\[\]{}]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+      };
+
+      const similarity = (a, b) => {
+        if (a.length < 2 || b.length < 2) return a === b ? 1 : 0;
+        const bigramsA = new Set();
+        for (let i = 0; i < a.length - 1; i++) bigramsA.add(a.substring(i, i + 2));
+        const bigramsB = new Set();
+        for (let i = 0; i < b.length - 1; i++) bigramsB.add(b.substring(i, i + 2));
+        let intersection = 0;
+        bigramsA.forEach(bg => { if (bigramsB.has(bg)) intersection++; });
+        return (2 * intersection) / (bigramsA.size + bigramsB.size);
+      };
+
+      const mlCompare = (itemId, givenText, officialText) => {
+        const given = normalizeText(givenText);
+        const official = normalizeText(officialText);
+        const itemLearning = learningData[itemId] || { accepted: [], rejected: [], threshold: 0.75 };
+        const threshold = itemLearning.threshold || 0.75;
+
+        if (given === official) return { verdict: 'correct', confidence: 1.0, reason: 'Corrispondenza esatta con la definizione ufficiale' };
+
+        let bestAcceptedSim = 0;
+        for (const acc of (itemLearning.accepted || [])) {
+          const sim = similarity(given, acc);
+          if (sim > bestAcceptedSim) bestAcceptedSim = sim;
+          if (given === acc) return { verdict: 'correct', confidence: 0.95, reason: 'Corrisponde a una formulazione già accettata in precedenza' };
+        }
+
+        let bestRejectedSim = 0;
+        for (const rej of (itemLearning.rejected || [])) {
+          const sim = similarity(given, rej);
+          if (sim > bestRejectedSim) bestRejectedSim = sim;
+          if (given === rej) return { verdict: 'wrong', confidence: 0.95, reason: 'Corrisponde a una risposta già rifiutata in precedenza' };
+        }
+
+        const officialSim = similarity(given, official);
+
+        if (bestAcceptedSim > 0.85) return { verdict: 'correct', confidence: bestAcceptedSim, reason: `Molto simile a una risposta accettata (${Math.round(bestAcceptedSim * 100)}%)` };
+        if (bestRejectedSim > 0.85) return { verdict: 'wrong', confidence: bestRejectedSim, reason: `Molto simile a una risposta rifiutata (${Math.round(bestRejectedSim * 100)}%)` };
+
+        const containsMatch = official.includes(given) || given.includes(official);
+        if (containsMatch) return { verdict: 'correct', confidence: 0.8, reason: 'Il testo è contenuto nella risposta ufficiale (o viceversa)' };
+
+        if (officialSim >= threshold) {
+          return { verdict: 'correct', confidence: officialSim, reason: `Similarità ${Math.round(officialSim * 100)}% (soglia: ${Math.round(threshold * 100)}%)` };
+        }
+
+        return { verdict: 'wrong', confidence: 1 - officialSim, reason: `Similarità ${Math.round(officialSim * 100)}% sotto la soglia del ${Math.round(threshold * 100)}%` };
+      };
+
+      const handleCheckAnswer = () => {
+        setRevealed(true);
+        if (checkProhibitedContent(userText)) {
+          setAutoVerdict('wrong');
+          setMlReason('Risposta NON valida: contiene parole o espressioni vietate dal regolamento.');
+          setMlConfidence(1);
+          return;
+        }
+        const result = mlCompare(currentItem.id, userText, currentItem.content);
+        setAutoVerdict(result.verdict);
+        setMlReason(result.reason);
+        setMlConfidence(result.confidence);
+      };
+
+      const handleConfirmVerdict = (userAgreesWithVerdict) => {
+        if (checkProhibitedContent(userText)) {
+          alert("Questa risposta contiene parole o espressioni non consentite dal regolamento e non può essere considerata corretta.");
+          setSelfScore('wrong');
+          setVerdictConfirmed(true);
+          setAnswers([...answers, { itemId: currentItem.id, userText, score: 'wrong' }]);
+          return;
+        }
+
+        const finalVerdict = userAgreesWithVerdict ? autoVerdict : (autoVerdict === 'correct' ? 'wrong' : 'correct');
+        setSelfScore(finalVerdict);
+        setVerdictConfirmed(true);
+        setAnswers([...answers, { itemId: currentItem.id, userText, score: finalVerdict }]);
+
+        const normalizedAnswer = normalizeText(userText);
+        const newLearning = { ...learningData };
+        if (!newLearning[currentItem.id]) {
+          newLearning[currentItem.id] = { accepted: [], rejected: [], threshold: 0.75 };
+        }
+        const itemData = { ...newLearning[currentItem.id] };
+        const accepted = [...(itemData.accepted || [])];
+        const rejected = [...(itemData.rejected || [])];
+
+        if (finalVerdict === 'correct') {
+          if (!accepted.includes(normalizedAnswer)) accepted.push(normalizedAnswer);
+          const rejIdx = rejected.indexOf(normalizedAnswer);
+          if (rejIdx >= 0) rejected.splice(rejIdx, 1);
+        } else {
+          if (!rejected.includes(normalizedAnswer)) rejected.push(normalizedAnswer);
+          const accIdx = accepted.indexOf(normalizedAnswer);
+          if (accIdx >= 0) accepted.splice(accIdx, 1);
+        }
+
+        if (!userAgreesWithVerdict) {
+          const officialSim = similarity(normalizedAnswer, normalizeText(currentItem.content));
+          if (finalVerdict === 'correct' && officialSim < itemData.threshold) {
+            itemData.threshold = Math.max(0.4, officialSim - 0.05);
+          } else if (finalVerdict === 'wrong' && officialSim >= itemData.threshold) {
+            itemData.threshold = Math.min(0.95, officialSim + 0.05);
+          }
+        }
+
+        itemData.accepted = accepted;
+        itemData.rejected = rejected;
+        newLearning[currentItem.id] = itemData;
+        saveLearningData(newLearning);
+      };
+
+      const handleNext = () => {
+        if (currentIdx < activeList.length - 1) {
+          setCurrentIdx(currentIdx + 1);
+          setUserText('');
+          setRevealed(false);
+          setSelfScore(null);
+          setAutoVerdict(null);
+          setVerdictConfirmed(false);
+          setMlReason('');
+          setMlConfidence(0);
+        } else {
+          const correct = answers.filter(a => a.score === 'correct').length;
+          setFinalScore({ correct, total: activeList.length });
+          setShowScore(true);
+        }
+      };
+
+      const handleRestart = () => {
+        setCurrentIdx(0);
+        setUserText('');
+        setRevealed(false);
+        setSelfScore(null);
+        setAnswers([]);
+        setShowScore(false);
+        setAutoVerdict(null);
+        setVerdictConfirmed(false);
+        setMlReason('');
+        setMlConfidence(0);
+      };
+
+      const learnCount = learningData[currentItem?.id] ? ((learningData[currentItem.id].accepted || []).length + (learningData[currentItem.id].rejected || []).length) : 0;
+
+      return (
+        <div className="min-h-screen pb-12 text-[#0b192c]">
+          {/* HEADER / NAVBAR */}
+          <header className="bg-white/90 border-b border-sky-200 sticky top-0 z-40 backdrop-blur-md shadow-sm">
+            <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+              
+              <div className="flex items-center space-x-3">
+                <a href="/" className="flex items-center space-x-2">
+                  <span className="text-2xl font-bold text-sky-500 font-serif leading-none select-none">π</span>
+                  <h1 className="font-extrabold text-xl text-[#0b192c] tracking-tight">geometria</h1>
+                </a>
+                <span className="hidden sm:inline-block text-slate-300">/</span>
+                <span className="hidden sm:inline-block text-xs font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200">
+                  Test Definizioni
+                </span>
+              </div>
+
+              <div className="flex items-center space-x-1.5 bg-sky-50/80 p-1 rounded-md border border-sky-200 text-xs font-bold">
+                <a href="/" className="px-3 py-1.5 rounded-md text-sky-900 hover:bg-sky-100 transition-all">
+                  Home
+                </a>
+                <a href="/test" className="px-3 py-1.5 rounded-md text-sky-900 hover:bg-sky-100 transition-all">
+                  Area Test
+                </a>
+                <a href="/test-teoremi" className="px-3 py-1.5 rounded-md text-sky-900 hover:bg-sky-100 transition-all">
+                  Test Teoremi
+                </a>
+                <a href="/machine-learning" className="px-3 py-1.5 rounded-md text-sky-900 hover:bg-sky-100 transition-all">
+                  Archivio IA
+                </a>
+              </div>
+            </div>
+          </header>
+
+          <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+            {/* SUB-HEADER WITH CHAPTER TOGGLER */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-sky-200 rounded-lg p-4 shadow-xs">
+              <div>
+                <h2 className="text-base font-extrabold text-[#0b192c] flex items-center gap-2">
+                  <span>📖 Test Definizioni</span>
+                  <span className="text-xs font-semibold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200">
+                    {activeList.length} definizioni disponibili
+                  </span>
+                </h2>
+                <p className="text-xs text-sky-800 mt-0.5">
+                  Capitoli attivi: <strong className="text-sky-900">{testChapters.join(', ') || 'Nessuno'}</strong>
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowChapterSelector(!showChapterSelector)}
+                className="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 border border-sky-300 text-sky-900 font-bold rounded-md text-xs transition-all flex items-center gap-1.5"
+              >
+                <span>⚙️ Cambia Capitoli</span>
+                <span>{showChapterSelector ? '▲' : '▼'}</span>
+              </button>
+            </div>
+
+            {/* EXPANDABLE CHAPTER SELECTOR */}
+            {showChapterSelector && (
+              <div className="bg-sky-50/90 border border-dashed border-sky-300 rounded-lg p-4 space-y-3 animate-fade-in shadow-xs">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-sky-900">Seleziona i capitoli per questo test:</span>
+                  <div className="flex space-x-3 text-xs">
+                    <button onClick={() => setTestChapters(CHAPTERS)} className="font-bold text-sky-700 hover:underline">Tutti</button>
+                    <button onClick={() => setTestChapters([])} className="font-bold text-slate-500 hover:underline">Nessuno</button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
+                  {CHAPTERS.map(ch => {
+                    const isSel = testChapters.includes(ch);
+                    return (
+                      <button
+                        key={ch}
+                        onClick={() => {
+                          if (isSel) setTestChapters(testChapters.filter(id => id !== ch));
+                          else setTestChapters([...testChapters, ch]);
+                        }}
+                        className={`p-1.5 rounded text-xs font-bold transition-all border ${isSel ? 'bg-sky-600 border-sky-600 text-white' : 'bg-white border-sky-200 text-sky-900 hover:bg-sky-100'}`}
+                      >
+                        {ch}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* MAIN TEST CARD OR EMPTY / SCORE SCREEN */}
+            {activeList.length === 0 ? (
+              <div className="p-8 text-center bg-sky-50 border border-sky-200 rounded-lg text-sky-900 font-medium text-xs space-y-3">
+                <p>Nessuna definizione trovata nei capitoli selezionati ({testChapters.join(', ') || 'Nessuno'}).</p>
+                <div className="flex justify-center gap-2">
+                  <button onClick={() => setTestChapters(CHAPTERS)} className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-md text-xs">
+                    Seleziona Tutti i Capitoli
+                  </button>
+                  <a href="/test" className="px-4 py-2 bg-white border border-sky-300 text-sky-900 font-bold rounded-md text-xs hover:bg-sky-50">
+                    Torna all'Area Test
+                  </a>
+                </div>
+              </div>
+            ) : showScore ? (
+              <div className="bg-white border border-sky-200 rounded-xl p-8 max-w-lg mx-auto shadow-lg text-center space-y-5 animate-fade-in">
+                {(() => {
+                  const pct = finalScore.total > 0 ? Math.round((finalScore.correct / finalScore.total) * 100) : 0;
+                  const emoji = pct === 100 ? '🏆' : pct >= 70 ? '👏' : pct >= 50 ? '💪' : '📚';
+                  const msg = pct === 100 ? 'Perfetto! Hai risposto correttamente a tutte le definizioni!' : pct >= 70 ? 'Ottimo lavoro! Ottima conoscenza delle definizioni.' : pct >= 50 ? 'Sufficiente. Rivedere alcune definizioni ti aiuterà.' : 'Serve ancora un po\' di studio. Riprova subito!';
+                  if (pct === 100) try { confetti({ particleCount: 200, spread: 100 }); } catch(e){}
+                  return (
+                    <>
+                      <div className="text-6xl">{emoji}</div>
+                      <h2 className="text-2xl font-black text-[#0b192c]">Risultato Test Definizioni</h2>
+                      <div className="bg-sky-50 border border-sky-200 rounded-xl p-6">
+                        <div className="text-5xl font-black text-sky-700">{pct}%</div>
+                        <p className="text-sm font-bold text-[#0b192c] mt-2">{finalScore.correct} / {finalScore.total} definizioni corrette</p>
+                      </div>
+                      <p className="text-xs text-slate-700">{msg}</p>
+                      <div className="flex flex-wrap justify-center gap-2 pt-2">
+                        <button onClick={handleRestart} className="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg text-xs transition-colors shadow-sm">
+                          Rifai Questo Test
+                        </button>
+                        <a href="/test-teoremi" className="px-5 py-2.5 bg-sky-700 hover:bg-sky-800 text-white font-bold rounded-lg text-xs transition-colors shadow-sm">
+                          Fai Test Teoremi →
+                        </a>
+                        <a href="/test" className="px-5 py-2.5 bg-white border border-sky-300 text-sky-900 hover:bg-sky-50 font-bold rounded-lg text-xs transition-colors">
+                          Torna all'Area Test
+                        </a>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            ) : (
+              <div className="bg-[#f0f9ff] border border-sky-200 rounded-xl p-6 space-y-5 shadow-sm">
+                <div className="border-b border-sky-200 pb-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono font-bold text-sky-900">
+                      Definizione {currentIdx + 1} di {activeList.length} • {currentItem.code}
+                    </span>
+                    <span className="text-xs text-sky-700 font-bold bg-sky-100 px-2 py-0.5 rounded">
+                      Capitolo {currentItem.chapter}
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-black text-[#0b192c] mt-1">{currentItem.name}</h3>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-[#0b192c]">
+                    Scrivi la definizione esatta dell'oggetto geometrico:
+                  </label>
+                  <textarea
+                    value={userText}
+                    onChange={e => setUserText(e.target.value)}
+                    rows={5}
+                    disabled={revealed}
+                    placeholder="Scrivi qui a memoria la definizione dell'oggetto..."
+                    className={`w-full bg-white border rounded-lg p-3.5 text-xs text-[#0b192c] transition-all font-medium ${revealed ? 'border-slate-300 bg-slate-50' : 'border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-500'}`}
+                  />
+                </div>
+
+                {!revealed ? (
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleCheckAnswer}
+                      disabled={!userText.trim()}
+                      className="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-lg text-xs transition-colors shadow-sm"
+                    >
+                      Verifica Risposta con IA
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4 pt-4 border-t border-sky-200 animate-fade-in">
+                    {/* Auto verdict banner */}
+                    <div className={`p-4 rounded-lg border-2 text-center ${autoVerdict === 'correct' ? 'bg-emerald-50 border-emerald-400' : 'bg-rose-50 border-rose-400'}`}>
+                      <div className="text-3xl mb-1">{autoVerdict === 'correct' ? '✅' : '❌'}</div>
+                      <p className={`text-sm font-bold ${autoVerdict === 'correct' ? 'text-emerald-800' : 'text-rose-800'}`}>
+                        {autoVerdict === 'correct' ? 'Risposta CORRETTA!' : 'Risposta SBAGLIATA'}
+                      </p>
+                      <p className="text-[11px] text-slate-600 mt-1 italic">🤖 {mlReason}</p>
+                      {learnCount > 0 && (
+                        <p className="text-[10px] text-sky-700 mt-1 font-semibold">
+                          🧠 Machine Learning: {learnCount} risposte memorizzate per questa definizione
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Show both answers side by side */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="bg-white border border-slate-200 p-4 rounded-lg shadow-2xs">
+                        <h4 className="text-[10px] text-slate-500 font-bold uppercase mb-1.5">La tua risposta</h4>
+                        <p className="text-xs text-[#0b192c] whitespace-pre-wrap leading-relaxed">{userText}</p>
+                      </div>
+                      <div className="bg-white border border-sky-300 p-4 rounded-lg shadow-2xs">
+                        <h4 className="text-[10px] text-sky-800 font-bold uppercase mb-1.5">Definizione ufficiale corretta</h4>
+                        <MathRender content={currentItem.content} className="text-[#0b192c] text-xs leading-relaxed" />
+                      </div>
+                    </div>
+
+                    {/* Ask if verdict is correct */}
+                    {!verdictConfirmed ? (
+                      <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 space-y-2.5">
+                        <p className="text-xs font-bold text-amber-900">Il verdetto automatico dell'IA è corretto? Confronta le risposte:</p>
+                        <div className="flex gap-3">
+                          <button onClick={() => handleConfirmVerdict(true)} className="flex-1 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg text-xs transition-colors shadow-xs">
+                            👍 Sì, il verdetto è giusto
+                          </button>
+                          <button onClick={() => handleConfirmVerdict(false)} className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg text-xs transition-colors shadow-xs">
+                            👎 No, correggi verdetto (insegna all'IA)
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className={`p-3 rounded-lg border text-center text-sm font-bold ${selfScore === 'correct' ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-rose-50 border-rose-300 text-rose-800'}`}>
+                          {selfScore === 'correct' ? '✅ Punteggio registrato: CORRETTA' : '❌ Punteggio registrato: SBAGLIATA'}
+                        </div>
+                        <div className="flex justify-end">
+                          <button onClick={handleNext} className="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg text-xs transition-colors shadow-sm">
+                            {currentIdx < activeList.length - 1 ? 'Prossima Definizione →' : 'Vedi Punteggio Finale →'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </main>
+
+          <GlobalFooter />
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<TestDefinizioniApp />);
+  </script>
+</body>
+</html>
