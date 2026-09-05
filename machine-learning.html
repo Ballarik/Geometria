@@ -702,32 +702,28 @@
           <header className="bg-white/90 border-b border-sky-200 sticky top-0 z-40 backdrop-blur-md shadow-sm">
             <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
               
-              <div className="flex items-center space-x-3">
-                <a href="/" className="flex items-center space-x-2">
-                  <span className="text-2xl font-bold text-sky-500 font-serif leading-none select-none">π</span>
-                  <h1 className="font-extrabold text-xl text-[#0b192c] tracking-tight">geometria</h1>
-                </a>
-                <span className="hidden sm:inline-block text-slate-300">/</span>
-                <span className="hidden sm:inline-block text-xs font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200">
-                  Archivio Machine Learning
-                </span>
-              </div>
+              {/* LOGO */}
+              <a href="/" className="flex items-center space-x-2">
+                <span className="text-2xl font-bold text-sky-500 font-serif leading-none select-none">π</span>
+                <h1 className="font-extrabold text-xl text-[#0b192c] tracking-tight">geometria</h1>
+              </a>
 
-              <div className="flex items-center space-x-1.5 bg-sky-50/80 p-1 rounded-md border border-sky-200 text-xs font-bold">
-                <a href="/" className="px-3 py-1.5 rounded-md text-sky-900 hover:bg-sky-100 transition-all">
-                  Home
+              <div className="flex items-center space-x-1.5 bg-sky-50/80 p-1 rounded-md border border-sky-200">
+                <a
+                  href="/"
+                  className="px-3 py-1.5 rounded-md text-xs font-bold text-sky-900 hover:bg-sky-100 transition-all"
+                >
+                  Consultazione
                 </a>
-                <a href="/test" className="px-3 py-1.5 rounded-md text-sky-900 hover:bg-sky-100 transition-all">
+                <a
+                  href="/test"
+                  className="px-3 py-1.5 rounded-md text-xs font-bold text-sky-900 hover:bg-sky-100 transition-all"
+                >
                   Area Test
                 </a>
-                <a href="/test-definizioni" className="px-3 py-1.5 rounded-md text-sky-900 hover:bg-sky-100 transition-all">
-                  Definizioni
-                </a>
-                <a href="/test-teoremi" className="px-3 py-1.5 rounded-md text-sky-900 hover:bg-sky-100 transition-all">
-                  Teoremi
-                </a>
-                <span className="px-3 py-1.5 rounded-md bg-sky-600 text-white shadow-sm">
-                  Archivio IA
+                <span className="px-3 py-1.5 rounded-md text-xs font-bold bg-sky-600 text-white shadow-sm flex items-center gap-1.5">
+                  <FolderIcon className="w-3.5 h-3.5 text-white" />
+                  <span className="hidden sm:inline">Archivio IA</span>
                 </span>
               </div>
             </div>
