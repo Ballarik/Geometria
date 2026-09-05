@@ -30,39 +30,6 @@ L'applicazione è distribuita online tramite **Vercel** ed è collegata al datab
 
 ---
 
-## 💻 Sviluppo e Avvio Locale (Opzionale)
-
-### Passaggi per l'esecuzione locale:
-
-1. **Apri il Terminale** ed entra nella cartella del progetto:
-   ```bash
-   cd ~/Desktop/Libreria/geometria
-   ```
-
-2. **Avvia il server locale:**
-   ```bash
-   node server.js
-   ```
-   *Messaggio*: `🚀 Servizio Geometria attivo su: http://127.0.0.1:3000`
-
-3. **Apri il browser su:**
-   ```
-   http://localhost:3000
-   ```
-
----
-
-## 📌 Convenzione Commit Git & GitHub
-
-Quando fai il push su GitHub, puoi inserire nel messaggio del commit i codici degli elementi aggiunti:
-
-```bash
-git add .
-git commit -m "Aggiunti elementi G6-T-6B2E5B, G6-T-D5C32C"
-git push origin main
-```
-
----
 
 ## 📁 Struttura dei File
 
