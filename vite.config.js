@@ -13,6 +13,15 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       {
+        name: 'html-env-transform',
+        transformIndexHtml(html) {
+          const supabaseUrl = env.VITE_SUPABASE_URL || 'https://ybpvdijjxrtarhkkqptt.supabase.co';
+          const supabaseKey = env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_MCO5-bhukiy1pjoUotfKDg_mbfUxItY';
+          const script = `<script>window.VITE_SUPABASE_URL = ${JSON.stringify(supabaseUrl)}; window.VITE_SUPABASE_ANON_KEY = ${JSON.stringify(supabaseKey)};</script>`;
+          return html.replace('<head>', `<head>\n  ${script}`);
+        }
+      },
+      {
         name: 'route-rewrite-plugin',
         configureServer(server) {
           server.middlewares.use((req, res, next) => {

@@ -75,11 +75,16 @@
     const CHAPTERS = Array.from({ length: 16 }, (_, i) => `G${i + 1}`);
     const STORAGE_KEY = 'geometria_db_main';
 
-    // SUPABASE CLIENT HELPER
+    // SUPABASE CLIENT CONFIG & HELPER
+    const SUPABASE_CONFIG = {
+      url: 'https://ybpvdijjxrtarhkkqptt.supabase.co',
+      anonKey: 'sb_publishable_MCO5-bhukiy1pjoUotfKDg_mbfUxItY'
+    };
+
     const getSupabaseClient = () => {
       try {
-        const url = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) || window.VITE_SUPABASE_URL || localStorage.getItem('VITE_SUPABASE_URL');
-        const key = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_ANON_KEY) || window.VITE_SUPABASE_ANON_KEY || localStorage.getItem('VITE_SUPABASE_ANON_KEY');
+        const url = window.VITE_SUPABASE_URL || (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) || localStorage.getItem('VITE_SUPABASE_URL') || SUPABASE_CONFIG.url;
+        const key = window.VITE_SUPABASE_ANON_KEY || (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_ANON_KEY) || localStorage.getItem('VITE_SUPABASE_ANON_KEY') || SUPABASE_CONFIG.anonKey;
         if (window.supabase && url && key) {
           return window.supabase.createClient(url, key);
         }

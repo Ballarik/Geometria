@@ -121,10 +121,15 @@
       return false;
     }
 
+    const SUPABASE_CONFIG = {
+      url: 'https://ybpvdijjxrtarhkkqptt.supabase.co',
+      anonKey: 'sb_publishable_MCO5-bhukiy1pjoUotfKDg_mbfUxItY'
+    };
+
     const getSupabaseClient = () => {
       try {
-        const url = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) || window.VITE_SUPABASE_URL || localStorage.getItem('VITE_SUPABASE_URL');
-        const key = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_ANON_KEY) || window.VITE_SUPABASE_ANON_KEY || localStorage.getItem('VITE_SUPABASE_ANON_KEY');
+        const url = window.VITE_SUPABASE_URL || (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) || localStorage.getItem('VITE_SUPABASE_URL') || SUPABASE_CONFIG.url;
+        const key = window.VITE_SUPABASE_ANON_KEY || (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_ANON_KEY) || localStorage.getItem('VITE_SUPABASE_ANON_KEY') || SUPABASE_CONFIG.anonKey;
         if (window.supabase && url && key) {
           return window.supabase.createClient(url, key);
         }
@@ -302,6 +307,17 @@
             }
           } catch(e){}
           try {
+            const local = localStorage.getItem(STORAGE_KEY);
+            if (local) {
+              const parsed = JSON.parse(local);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                setItems(parsed);
+                setDataLoaded(true);
+                return;
+              }
+            }
+          } catch(e){}
+          try {
             const res = await fetch('./data.json');
             const data = await res.json();
             if (Array.isArray(data) && data.length > 0) {
@@ -309,10 +325,6 @@
               setDataLoaded(true);
               return;
             }
-          } catch(e){}
-          try {
-            const local = localStorage.getItem(STORAGE_KEY);
-            if (local) setItems(JSON.parse(local));
           } catch(e){}
           setDataLoaded(true);
         };
