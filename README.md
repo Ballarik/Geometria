@@ -2,7 +2,7 @@
 
 Applicazione web per la gestione, consultazione ed esercitazione sui teoremi e le definizioni di geometria (Capitoli G1-G16).
 
-🌐 **Sito Web Accessibile Online 24/7**: [https://geometria-app.vercel.app](https://geometria-app.vercel.app)
+🌐 **Sito Web Accessibile Online 24/7**: [https://geometria-fa-schifo.vercel.app](https://geometria-fa-schifo.vercel.app)
 
 ---
 
@@ -24,7 +24,7 @@ Applicazione web per la gestione, consultazione ed esercitazione sui teoremi e l
 
 L'applicazione è distribuita online tramite **Vercel** ed è collegata al database PostgreSQL su **Supabase**.
 
-- **Link Ufficiale**: [https://geometria-app.vercel.app](https://geometria-app.vercel.app)
+- **Link Ufficiale**: [https://geometria-fa-schifo.vercel.app](https://geometria-fa-schifo.vercel.app)
 - Tutti i nuovi teoremi/definizioni aggiunti dal sito si sincronizzano automaticamente nel database Cloud.
 - I progressi dei test e dell'algoritmo di machine learning sono memorizzati in modo permanente.
 
