@@ -413,7 +413,7 @@
           <div className="max-w-4xl mx-auto px-4">
             <div className="border-t border-sky-200/60 pt-6 space-y-1.5 text-[11px] text-slate-500 leading-relaxed font-normal">
               <p>
-                Progettato e programmato con sofferenza da <a href="https://www.instagram.com/ballarik99/#" target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:text-sky-800 hover:underline">BallaRik</a> · Nessun triangolo è stato maltrattato durante lo sviluppo · v1.4.2 — Settembre 2026
+                Progettato e programmato con sofferenza da <a href="https://www.instagram.com/ballarik99/#" target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:text-sky-800 hover:underline">BallaRik</a> · Nessun triangolo è stato maltrattato durante lo sviluppo · v1.5.0 — Settembre 2026
               </p>
               <p>
                 © 2026 Geometria — Progetto didattico indipendente, no-profit
@@ -427,6 +427,291 @@
             </div>
           </div>
         </footer>
+      );
+    }
+
+    // ==========================================
+    // ADMIN AUTHENTICATOR (TOTP RFC 6238) SYSTEM
+    // ==========================================
+    const _AUTH_PAYLOAD = "PiInLy5aPytbWDc3WFhaK1koOygrI1gmJl4gIi4jWSs=";
+    const _AUTH_K = 109;
+
+    function getAuthSecret() {
+      try {
+        const raw = atob(_AUTH_PAYLOAD);
+        let s = "";
+        for (let i = 0; i < raw.length; i++) {
+          s += String.fromCharCode(raw.charCodeAt(i) ^ _AUTH_K);
+        }
+        return s;
+      } catch (e) {
+        return "";
+      }
+    }
+
+    const _B32_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    function base32ToBytes(b32) {
+      let bits = "";
+      for (let i = 0; i < b32.length; i++) {
+        const val = _B32_CHARS.indexOf(b32.charAt(i).toUpperCase());
+        if (val === -1) continue;
+        bits += val.toString(2).padStart(5, "0");
+      }
+      const bytes = [];
+      for (let i = 0; i + 8 <= bits.length; i += 8) {
+        bytes.push(parseInt(bits.substr(i, 8), 2));
+      }
+      return new Uint8Array(bytes);
+    }
+
+    function pureSha1(bytes) {
+      let words = [];
+      for (let i = 0; i < bytes.length; i++) {
+        words[i >> 2] |= (bytes[i] & 0xff) << (24 - (i % 4) * 8);
+      }
+      const byteLen = bytes.length * 8;
+      words[byteLen >> 5] |= 0x80 << (24 - (byteLen % 32));
+      words[(((byteLen + 64) >> 9) << 4) + 15] = byteLen;
+
+      let h0 = 0x67452301, h1 = 0xefcdab89, h2 = 0x98badcfe, h3 = 0x10325476, h4 = 0xc3d2e1f0;
+      const w = new Int32Array(80);
+
+      for (let i = 0; i < words.length; i += 16) {
+        for (let j = 0; j < 16; j++) w[j] = words[i + j] | 0;
+        for (let j = 16; j < 80; j++) {
+          const n = w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16];
+          w[j] = (n << 1) | (n >>> 31);
+        }
+        let a = h0, b = h1, c = h2, d = h3, e = h4;
+        for (let j = 0; j < 80; j++) {
+          let f, k;
+          if (j < 20) { f = (b & c) | ((~b) & d); k = 0x5a827999; }
+          else if (j < 40) { f = b ^ c ^ d; k = 0x6ed9eba1; }
+          else if (j < 60) { f = (b & c) | (b & d) | (c & d); k = 0x8f1bbcdc; }
+          else { f = b ^ c ^ d; k = 0xca62c1d6; }
+          const temp = (((a << 5) | (a >>> 27)) + f + e + k + w[j]) | 0;
+          e = d; d = c; c = (b << 30) | (b >>> 2); b = a; a = temp;
+        }
+        h0 = (h0 + a) | 0; h1 = (h1 + b) | 0; h2 = (h2 + c) | 0; h3 = (h3 + d) | 0; h4 = (h4 + e) | 0;
+      }
+      const res = new Uint8Array(20);
+      const hs = [h0, h1, h2, h3, h4];
+      for (let i = 0; i < 5; i++) {
+        res[i*4] = (hs[i] >>> 24) & 0xff;
+        res[i*4+1] = (hs[i] >>> 16) & 0xff;
+        res[i*4+2] = (hs[i] >>> 8) & 0xff;
+        res[i*4+3] = hs[i] & 0xff;
+      }
+      return res;
+    }
+
+    function pureHmacSha1(key, msg) {
+      let k = new Uint8Array(key);
+      if (k.length > 64) k = pureSha1(k);
+      const kPad = new Uint8Array(64);
+      kPad.set(k);
+      const ipad = new Uint8Array(64), opad = new Uint8Array(64);
+      for (let i = 0; i < 64; i++) {
+        ipad[i] = kPad[i] ^ 0x36;
+        opad[i] = kPad[i] ^ 0x5c;
+      }
+      const inner = new Uint8Array(64 + msg.length);
+      inner.set(ipad);
+      inner.set(msg, 64);
+      const innerHash = pureSha1(inner);
+      const outer = new Uint8Array(64 + 20);
+      outer.set(opad);
+      outer.set(innerHash, 64);
+      return pureSha1(outer);
+    }
+
+    function computeTotpAtStep(keyBytes, stepBigInt) {
+      const msg = new Uint8Array(8);
+      const view = new DataView(msg.buffer);
+      view.setBigUint64(0, stepBigInt, false);
+      const sig = pureHmacSha1(keyBytes, msg);
+      const offset = sig[sig.length - 1] & 0x0f;
+      const binary =
+        ((sig[offset] & 0x7f) << 24) |
+        ((sig[offset + 1] & 0xff) << 16) |
+        ((sig[offset + 2] & 0xff) << 8) |
+        (sig[offset + 3] & 0xff);
+      return (binary % 1000000).toString().padStart(6, "0");
+    }
+
+    function verifyTotpCode(inputCode) {
+      if (!inputCode || typeof inputCode !== "string") return false;
+      const clean = inputCode.trim().replace(/\s+/g, "");
+      if (!/^\d{6}$/.test(clean)) return false;
+
+      const secret = getAuthSecret();
+      if (!secret) return false;
+
+      const keyBytes = base32ToBytes(secret);
+      const currentStep = Math.floor(Date.now() / 1000 / 30);
+
+      for (let offset = -1; offset <= 1; offset++) {
+        const step = BigInt(currentStep + offset);
+        if (computeTotpAtStep(keyBytes, step) === clean) return true;
+      }
+      return false;
+    }
+
+    // AUTHENTICATOR CONFIRMATION MODAL (Matches Geometry & Catalog Modals)
+    function AuthConfirmModal({ isOpen, onClose, onConfirm, actionTitle, actionDescription }) {
+      const [code, setCode] = useState('');
+      const [error, setError] = useState('');
+      const [isVerifying, setIsVerifying] = useState(false);
+      const inputRef = useRef(null);
+
+      useEffect(() => {
+        if (isOpen) {
+          setCode('');
+          setError('');
+          setIsVerifying(false);
+          setTimeout(() => { if (inputRef.current) inputRef.current.focus(); }, 80);
+        }
+      }, [isOpen]);
+
+      useEffect(() => {
+        if (!isOpen) return;
+        const handleKeyDown = (e) => {
+          if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+      }, [isOpen, onClose]);
+
+      if (!isOpen) return null;
+
+      const handleSubmit = (e) => {
+        if (e) e.preventDefault();
+        const clean = code.trim().replace(/\s+/g, '');
+        if (clean.length !== 6 || !/^\d{6}$/.test(clean)) {
+          setError('Inserisci il codice numerico completo di 6 cifre.');
+          return;
+        }
+
+        setIsVerifying(true);
+        setError('');
+
+        setTimeout(() => {
+          const isValid = verifyTotpCode(clean);
+          if (isValid) {
+            setIsVerifying(false);
+            onConfirm();
+          } else {
+            setIsVerifying(false);
+            setError('Codice errato o scaduto. Controlla l\'app Authenticator e riprova.');
+          }
+        }, 120);
+      };
+
+      return (
+        <div
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
+          onClick={onClose}
+        >
+          <div
+            className="bg-white border border-sky-300 rounded-md max-w-md w-full flex flex-col p-6 shadow-2xl space-y-4 text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* HEADER */}
+            <div className="flex justify-between items-center border-b border-sky-200 pb-3">
+              <div>
+                <span className="text-xs font-extrabold text-sky-800 uppercase tracking-wider">
+                  SICUREZZA & AUTENTICAZIONE
+                </span>
+                <h3 className="text-lg font-bold text-[#0b192c]">
+                  Conferma Eliminazione
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-sky-900 font-bold text-lg hover:text-sky-700 transition-colors cursor-pointer px-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* ITEM CONTEXT CARD */}
+            {actionTitle && (
+              <div className="bg-sky-50/70 border border-sky-200 rounded-md p-3 space-y-1">
+                <span className="text-[10px] font-bold text-sky-800 uppercase tracking-wider block">
+                  Elemento Selezionato
+                </span>
+                <p className="text-xs font-extrabold text-[#0b192c]">
+                  {actionTitle}
+                </p>
+                {actionDescription && (
+                  <p className="text-[11px] text-sky-700 leading-snug">
+                    {actionDescription}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* FORM */}
+            <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+              <div className="space-y-1.5 text-center">
+                <label className="block text-xs font-bold text-[#0b192c]">
+                  Codice a 6 Cifre
+                </label>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  autoComplete="one-time-code"
+                  placeholder="000000"
+                  value={code}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setCode(val);
+                    if (error) setError('');
+                  }}
+                  className="w-full bg-white border border-sky-300 rounded-md p-2.5 text-center text-2xl font-mono tracking-[0.35em] font-extrabold text-[#0b192c] focus:outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-500 transition-all placeholder:text-sky-300 placeholder:tracking-[0.2em]"
+                />
+              </div>
+
+              {/* ERROR ALERT */}
+              {error && (
+                <div className="p-2.5 bg-rose-50 border border-rose-300 text-rose-800 rounded-md text-xs font-bold animate-fade-in flex items-center justify-center gap-2">
+                  <span>⚠️</span>
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* FOOTER ACTIONS */}
+              <div className="flex justify-end items-center gap-2.5 pt-3 border-t border-sky-200">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={isVerifying}
+                  className="px-4 py-1.5 border border-sky-300 text-sky-900 font-bold rounded-md text-xs hover:bg-sky-50 transition-colors cursor-pointer"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="submit"
+                  disabled={isVerifying || code.trim().length !== 6}
+                  className="px-5 py-1.5 bg-rose-700 hover:bg-rose-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-md text-xs shadow-sm transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  {isVerifying ? (
+                    'Verifica in corso...'
+                  ) : (
+                    <>
+                      <span>Elimina Definitivamente</span>
+                      <span>🗑️</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       );
     }
 
@@ -468,6 +753,26 @@
       const [showArchive, setShowArchive] = useState(false);
       const [learningData, setLearningData] = useState({});
       const [learningLoaded, setLearningLoaded] = useState(false);
+
+      // AUTHENTICATOR MODAL STATE & HANDLER
+      const [authModal, setAuthModal] = useState({
+        isOpen: false,
+        actionTitle: '',
+        actionDescription: '',
+        onConfirm: null
+      });
+
+      const requireAuth = (title, description, onConfirmCallback) => {
+        setAuthModal({
+          isOpen: true,
+          actionTitle: title,
+          actionDescription: description,
+          onConfirm: () => {
+            setAuthModal(prev => ({ ...prev, isOpen: false }));
+            if (onConfirmCallback) onConfirmCallback();
+          }
+        });
+      };
 
       const handleStartTest = (mode) => {
         if (testChapters.length === 0) {
@@ -927,22 +1232,26 @@
         return () => window.removeEventListener('paste', handlePaste);
       }, [isWizardOpen]);
 
-      const handleDeleteItem = async (id) => {
-        const confirmed = confirm(
-          "⚠️ ELIMINAZIONE CONTENUTO:\n\nConfermi di voler eliminare questo elemento dal database?\n\nTi chiediamo di mantenere il database accurato e di procedere solo se l'elemento è errato, duplicato o non conforme.\n\nContinuando accetti e sei l'unico responsabile di quello che fai."
+      const handleDeleteItem = (id) => {
+        const itemToDelete = items.find(i => i.id === id);
+        const name = itemToDelete ? (itemToDelete.name || itemToDelete.code || `ID #${id}`) : `ID #${id}`;
+
+        requireAuth(
+          `Eliminazione elemento: "${name}"`,
+          "L'elemento verrà rimosso definitivamente dal database Supabase e dalla memoria locale.",
+          async () => {
+            const updated = items.filter(i => i.id !== id);
+            setItems(updated);
+            saveStoredItems(updated);
+            if (selectedItem && selectedItem.id === id) setSelectedItem(null);
+
+            // Delete from Supabase Cloud Database
+            const sp = getSupabaseClient();
+            if (sp) {
+              try { await sp.from('items').delete().eq('id', id); } catch(e){}
+            }
+          }
         );
-        if (!confirmed) return;
-
-        const updated = items.filter(i => i.id !== id);
-        setItems(updated);
-        saveStoredItems(updated);
-        if (selectedItem && selectedItem.id === id) setSelectedItem(null);
-
-        // Delete from Supabase Cloud Database
-        const sp = getSupabaseClient();
-        if (sp) {
-          try { await sp.from('items').delete().eq('id', id); } catch(e){}
-        }
       };
 
       return (
@@ -1094,6 +1403,7 @@
                   learningData={learningData}
                   onSaveLearning={saveLearningData}
                   onBack={() => setShowArchive(false)}
+                  onRequireAuth={requireAuth}
                 />
               ) : !activeTestMode ? (
                 <div className="space-y-6">
@@ -1555,6 +1865,19 @@
             </div>
           )}
 
+          {/* AUTHENTICATOR CONFIRMATION MODAL */}
+          <AuthConfirmModal
+            isOpen={authModal.isOpen}
+            onClose={() => setAuthModal(prev => ({ ...prev, isOpen: false }))}
+            onConfirm={() => {
+              const cb = authModal.onConfirm;
+              setAuthModal(prev => ({ ...prev, isOpen: false }));
+              if (cb) cb();
+            }}
+            actionTitle={authModal.actionTitle}
+            actionDescription={authModal.actionDescription}
+          />
+
           {/* GLOBAL FOOTER */}
           <GlobalFooter />
         </div>
@@ -1562,7 +1885,7 @@
     }
 
     // LEARNING ARCHIVE VIEWER COMPONENT (FILE SYSTEM / HIERARCHICAL TREE)
-    function LearningArchiveViewer({ items, learningData, onSaveLearning, onBack }) {
+    function LearningArchiveViewer({ items, learningData, onSaveLearning, onBack, onRequireAuth }) {
       const [search, setSearch] = useState('');
       const [expandedChapters, setExpandedChapters] = useState({});
       const [expandedTypes, setExpandedTypes] = useState({});
@@ -1628,26 +1951,36 @@
         };
       }, [selectedItem, learningData]);
 
-      // Delete single learned response with confirmation popup
+      // Delete single learned response with Authenticator confirmation
       const handleDeleteResponse = (type, text) => {
-        const confirmed = confirm(
-          "⚠️ ELIMINAZIONE RISPOSTA APPRESA:\n\nConfermi di voler eliminare definitivamente questa risposta dall'archivio di apprendimento?\n\nTi chiediamo di procedere solo se la risposta è non pertinente, spam o classificata in modo errato.\n\nContinuando accetti e sei l'unico responsabile di quello che fai."
-        );
-        if (!confirmed) return;
+        const typeLabel = type === 'accepted' ? 'risposta accettata' : 'risposta rifiutata';
+        const snippet = text.length > 50 ? text.slice(0, 50) + '...' : text;
 
-        const current = learningData[selectedItemId] || { accepted: [], rejected: [], threshold: 0.75 };
-        const updatedItem = {
-          ...current,
-          accepted: type === 'accepted' ? (current.accepted || []).filter(t => t !== text) : (current.accepted || []),
-          rejected: type === 'rejected' ? (current.rejected || []).filter(t => t !== text) : (current.rejected || [])
+        const doDelete = () => {
+          const current = learningData[selectedItemId] || { accepted: [], rejected: [], threshold: 0.75 };
+          const updatedItem = {
+            ...current,
+            accepted: type === 'accepted' ? (current.accepted || []).filter(t => t !== text) : (current.accepted || []),
+            rejected: type === 'rejected' ? (current.rejected || []).filter(t => t !== text) : (current.rejected || [])
+          };
+
+          const updated = {
+            ...learningData,
+            [selectedItemId]: updatedItem
+          };
+
+          onSaveLearning(updated);
         };
 
-        const updated = {
-          ...learningData,
-          [selectedItemId]: updatedItem
-        };
-
-        onSaveLearning(updated);
+        if (onRequireAuth) {
+          onRequireAuth(
+            `Eliminazione ${typeLabel}`,
+            `"${snippet}" verrà rimossa definitivamente dall'archivio di apprendimento.`,
+            doDelete
+          );
+        } else {
+          doDelete();
+        }
       };
 
       // Total learned responses across all items
