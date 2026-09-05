@@ -116,25 +116,10 @@
     }
 
     function TestHubApp() {
-      // Saved chapters or all chapters
-      const [testChapters, setTestChapters] = useState(() => {
-        try {
-          const saved = localStorage.getItem('geometria_test_chapters');
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-          }
-        } catch(e){}
-        return CHAPTERS;
-      });
+      // All chapters are unselected by default
+      const [testChapters, setTestChapters] = useState([]);
 
       const [learningData, setLearningData] = useState({});
-
-      useEffect(() => {
-        try {
-          localStorage.setItem('geometria_test_chapters', JSON.stringify(testChapters));
-        } catch(e){}
-      }, [testChapters]);
 
       // Load learning stats
       useEffect(() => {
@@ -259,7 +244,7 @@
                     1. Seleziona i Capitoli per il Test ({testChapters.length}/16 selezionati)
                   </h3>
                   <p className="text-[11px] text-sky-800">
-                    I capitoli selezionati verranno utilizzati automaticamente in tutte le sessioni di test.
+                    Seleziona uno o più capitoli su cui desideri effettuare il test.
                   </p>
                 </div>
                 <div className="flex space-x-3">
