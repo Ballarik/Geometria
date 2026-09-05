@@ -175,6 +175,43 @@
       }).catch(() => {});
     };
 
+    // VECTOR SVG ICONS (NO EMOJIS)
+    const FolderIcon = ({ className = "w-4 h-4 text-sky-500 shrink-0" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+      </svg>
+    );
+
+    const FolderOpenIcon = ({ className = "w-4 h-4 text-sky-600 shrink-0" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h6a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
+      </svg>
+    );
+
+    const TrashIcon = ({ className = "w-3.5 h-3.5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+    );
+
+    const SearchIcon = ({ className = "w-3.5 h-3.5 text-sky-400" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+    );
+
+    const CheckCircleIcon = ({ className = "w-4 h-4 text-emerald-600 shrink-0" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    );
+
+    const XCircleIcon = ({ className = "w-4 h-4 text-rose-600 shrink-0" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    );
+
     // MATH RENDER COMPONENT
     const MathRender = ({ content, className = '' }) => {
       if (!content) return null;
@@ -355,9 +392,12 @@
       const wContentRef = useRef(null);
       const wProofRef = useRef(null);
 
-      // Test State
+      // Test & Machine Learning State
       const [testChapters, setTestChapters] = useState([]);
       const [activeTestMode, setActiveTestMode] = useState(null);
+      const [showArchive, setShowArchive] = useState(false);
+      const [learningData, setLearningData] = useState({});
+      const [learningLoaded, setLearningLoaded] = useState(false);
 
       const handleStartTest = (mode) => {
         if (testChapters.length === 0) {
@@ -423,6 +463,120 @@
         };
         loadData();
       }, []);
+
+      // LOAD MACHINE LEARNING DATA ON STARTUP
+      useEffect(() => {
+        const loadLearning = async () => {
+          const sp = getSupabaseClient();
+          if (sp) {
+            try {
+              const { data, error } = await sp.from('learning').select('*');
+              if (!error && Array.isArray(data) && data.length > 0) {
+                const map = {};
+                data.forEach(row => {
+                  const h = row.history || {};
+                  map[row.item_id] = {
+                    score: row.score || 0,
+                    ease_factor: row.ease_factor || 2.5,
+                    interval: row.interval || 1,
+                    repetition: row.repetition || 0,
+                    accepted: Array.isArray(h.accepted) ? h.accepted : (Array.isArray(row.accepted) ? row.accepted : []),
+                    rejected: Array.isArray(h.rejected) ? h.rejected : (Array.isArray(row.rejected) ? row.rejected : []),
+                    threshold: typeof h.threshold === 'number' ? h.threshold : (typeof row.threshold === 'number' ? row.threshold : 0.75),
+                    history: Array.isArray(h.items) ? h.items : (Array.isArray(h) ? h : [])
+                  };
+                });
+                setLearningData(map);
+                setLearningLoaded(true);
+                return;
+              }
+            } catch(e){}
+          }
+
+          try {
+            const local = localStorage.getItem('geometria_learning');
+            if (local) {
+              const parsed = JSON.parse(local);
+              if (parsed && typeof parsed === 'object') {
+                setLearningData(parsed);
+                setLearningLoaded(true);
+              }
+            }
+          } catch(e){}
+
+          // 1. Try local server API
+          try {
+            const res = await fetch('/api/learning');
+            const data = await res.json();
+            if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+              setLearningData(data);
+              setLearningLoaded(true);
+              return;
+            }
+          } catch(e){}
+
+          // 2. Try static learning.json bundle fallback
+          try {
+            const res = await fetch('./learning.json');
+            const data = await res.json();
+            if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+              setLearningData(data);
+              setLearningLoaded(true);
+              return;
+            }
+          } catch(e){}
+
+          setLearningLoaded(true);
+        };
+        loadLearning();
+      }, []);
+
+      // SAVE MACHINE LEARNING DATA TO SUPABASE & LOCAL STORAGE
+      const saveLearningData = async (newData) => {
+        setLearningData(newData);
+        try {
+          localStorage.setItem('geometria_learning', JSON.stringify(newData));
+        } catch(e){}
+
+        const sp = getSupabaseClient();
+        if (sp && newData && typeof newData === 'object') {
+          try {
+            const rows = Object.entries(newData).map(([itemId, val]) => ({
+              item_id: itemId,
+              score: val.score || 0,
+              ease_factor: val.ease_factor || 2.5,
+              interval: val.interval || 1,
+              repetition: val.repetition || 0,
+              last_reviewed: new Date().toISOString(),
+              history: {
+                accepted: val.accepted || [],
+                rejected: val.rejected || [],
+                threshold: typeof val.threshold === 'number' ? val.threshold : 0.75,
+                items: val.history || []
+              }
+            }));
+            if (rows.length > 0) {
+              await sp.from('learning').upsert(rows);
+            }
+          } catch(e){}
+        }
+
+        fetch('/api/learning', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newData)
+        }).catch(() => {});
+      };
+
+      const totalLearnedCount = useMemo(() => {
+        let count = 0;
+        Object.values(learningData || {}).forEach(val => {
+          if (val) {
+            count += (val.accepted?.length || 0) + (val.rejected?.length || 0);
+          }
+        });
+        return count;
+      }, [learningData]);
 
       const resetWizard = () => {
         setWStep(1); setWType('definition'); setWChapter('N');
@@ -824,8 +978,35 @@
           {/* TEST TAB */}
           {activeTab === 'test' && (
             <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-              {!activeTestMode ? (
+              {showArchive ? (
+                <LearningArchiveViewer
+                  items={items}
+                  learningData={learningData}
+                  onSaveLearning={saveLearningData}
+                  onBack={() => setShowArchive(false)}
+                />
+              ) : !activeTestMode ? (
                 <div className="space-y-6">
+                  {/* TOP HEADER WITH ARCHIVE BUTTON */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-sky-200 rounded-md p-4 shadow-xs">
+                    <div>
+                      <h2 className="text-base font-extrabold text-[#0b192c]">Palestra dei Test & Machine Learning</h2>
+                      <p className="text-xs text-sky-800">Metti alla prova la tua memoria oppure esplora l'archivio delle risposte apprese dall'IA.</p>
+                    </div>
+                    <button
+                      onClick={() => setShowArchive(true)}
+                      className="px-3.5 py-2 rounded-md text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-sm flex items-center gap-2 transition-all"
+                    >
+                      <FolderIcon className="w-4 h-4 text-white" />
+                      <span>Archivio Risposte IA</span>
+                      {totalLearnedCount > 0 && (
+                        <span className="bg-sky-800 text-sky-100 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">
+                          {totalLearnedCount} risposte
+                        </span>
+                      )}
+                    </button>
+                  </div>
+
                   {/* CHAPTER SELECTOR */}
                   <div className="bg-sky-50/90 border border-dashed border-sky-300 rounded-md p-5 space-y-3 shadow-sm">
                     <div className="flex justify-between items-center">
@@ -873,7 +1054,13 @@
               ) : (
                 <div>
                   <button onClick={() => setActiveTestMode(null)} className="mb-4 text-xs font-bold px-3 py-1.5 bg-white border border-sky-300 text-sky-900 rounded-md hover:bg-sky-100">← Torna alla Scelta Test</button>
-                  <TestRunner mode={activeTestMode} items={items.filter(i => testChapters.includes(i.chapter))} onFinish={() => setActiveTestMode(null)} />
+                  <TestRunner
+                    mode={activeTestMode}
+                    items={items.filter(i => testChapters.includes(i.chapter))}
+                    onFinish={() => setActiveTestMode(null)}
+                    learningData={learningData}
+                    onSaveLearning={saveLearningData}
+                  />
                 </div>
               )}
             </main>
@@ -1269,7 +1456,7 @@
                   Nessun triangolo è stato maltrattato durante lo sviluppo
                 </p>
                 <p className="text-[10px] text-sky-300 mt-1.5">
-                  © 2026 R.B. | v1.2 settembre 2026
+                  © 2026 R.B. | v1.3 settembre 2026
                 </p>
               </div>
             </div>
@@ -1278,8 +1465,449 @@
       );
     }
 
+    // LEARNING ARCHIVE VIEWER COMPONENT (FILE SYSTEM / HIERARCHICAL TREE)
+    function LearningArchiveViewer({ items, learningData, onSaveLearning, onBack }) {
+      const [search, setSearch] = useState('');
+      const [expandedChapters, setExpandedChapters] = useState({});
+      const [expandedTypes, setExpandedTypes] = useState({});
+      const [selectedItemId, setSelectedItemId] = useState(null);
+
+      const toggleChapter = (ch) => {
+        setExpandedChapters(prev => ({ ...prev, [ch]: !prev[ch] }));
+      };
+
+      const toggleType = (key) => {
+        setExpandedTypes(prev => ({ ...prev, [key]: !prev[key] }));
+      };
+
+      const expandAll = () => {
+        const chs = {};
+        const tps = {};
+        CHAPTERS.forEach(ch => {
+          chs[ch] = true;
+          tps[`${ch}-theorem`] = true;
+          tps[`${ch}-definition`] = true;
+        });
+        setExpandedChapters(chs);
+        setExpandedTypes(tps);
+      };
+
+      const collapseAll = () => {
+        setExpandedChapters({});
+        setExpandedTypes({});
+      };
+
+      // Filter items based on search query
+      const q = search.toLowerCase().trim();
+      const isItemMatch = (it) => {
+        if (!q) return true;
+        return (it.name && it.name.toLowerCase().includes(q)) ||
+               (it.code && it.code.toLowerCase().includes(q)) ||
+               (it.chapter && it.chapter.toLowerCase().includes(q)) ||
+               (it.content && it.content.toLowerCase().includes(q));
+      };
+
+      // Get stats for an item
+      const getItemLearnedStats = (itemId) => {
+        const data = learningData[itemId];
+        if (!data) return { accepted: [], rejected: [], total: 0 };
+        const accepted = Array.isArray(data.accepted) ? data.accepted : [];
+        const rejected = Array.isArray(data.rejected) ? data.rejected : [];
+        return { accepted, rejected, total: accepted.length + rejected.length };
+      };
+
+      // Selected item object
+      const selectedItem = useMemo(() => {
+        return items.find(i => i.id === selectedItemId) || null;
+      }, [items, selectedItemId]);
+
+      const selectedItemStats = useMemo(() => {
+        if (!selectedItem) return { accepted: [], rejected: [], total: 0, threshold: 0.75 };
+        const data = learningData[selectedItem.id] || {};
+        return {
+          accepted: Array.isArray(data.accepted) ? data.accepted : [],
+          rejected: Array.isArray(data.rejected) ? data.rejected : [],
+          threshold: typeof data.threshold === 'number' ? data.threshold : 0.75,
+          total: (data.accepted?.length || 0) + (data.rejected?.length || 0)
+        };
+      }, [selectedItem, learningData]);
+
+      // Delete single learned response with confirmation popup
+      const handleDeleteResponse = (type, text) => {
+        const confirmed = confirm(
+          "⚠️ ELIMINAZIONE RISPOSTA APPRESA:\n\nConfermi di voler eliminare definitivamente questa risposta dall'archivio di apprendimento?\n\nTi chiediamo di procedere solo se la risposta è non pertinente, spam o classificata in modo errato.\n\nContinuando accetti e sei l'unico responsabile di quello che fai."
+        );
+        if (!confirmed) return;
+
+        const current = learningData[selectedItemId] || { accepted: [], rejected: [], threshold: 0.75 };
+        const updatedItem = {
+          ...current,
+          accepted: type === 'accepted' ? (current.accepted || []).filter(t => t !== text) : (current.accepted || []),
+          rejected: type === 'rejected' ? (current.rejected || []).filter(t => t !== text) : (current.rejected || [])
+        };
+
+        const updated = {
+          ...learningData,
+          [selectedItemId]: updatedItem
+        };
+
+        onSaveLearning(updated);
+      };
+
+      // Total learned responses across all items
+      const totalAllLearned = useMemo(() => {
+        let sum = 0;
+        Object.values(learningData || {}).forEach(v => {
+          if (v) sum += (v.accepted?.length || 0) + (v.rejected?.length || 0);
+        });
+        return sum;
+      }, [learningData]);
+
+      return (
+        <div className="space-y-5">
+          {/* HEADER BAR */}
+          <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-sky-200 rounded-md p-4 shadow-xs">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onBack}
+                className="px-3 py-1.5 bg-sky-50 border border-sky-300 text-sky-900 rounded-md text-xs font-bold hover:bg-sky-100 transition-colors"
+              >
+                ← Torna ai Test
+              </button>
+              <div>
+                <h2 className="text-base font-extrabold text-[#0b192c] flex items-center gap-2">
+                  <FolderIcon className="w-5 h-5 text-sky-600 shrink-0" />
+                  <span>Archivio Risposte Machine Learning</span>
+                </h2>
+                <p className="text-xs text-sky-800">
+                  Naviga l'albero dei capitoli per consultare le definizioni/enunciati ufficiali e gestire le risposte apprese dall'IA.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs">
+              <span className="px-3 py-1 rounded-md bg-sky-100 text-sky-900 font-bold border border-sky-200">
+                Totale risposte archiviate: <strong className="font-mono text-sky-700">{totalAllLearned}</strong>
+              </span>
+            </div>
+          </div>
+
+          {/* MAIN TWO-COLUMN EXPLORER */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-[680px]">
+            
+            {/* LEFT COLUMN: TREE FILE SYSTEM (4 cols) */}
+            <div className="lg:col-span-4 bg-white border border-sky-200 rounded-md p-4 shadow-xs flex flex-col max-h-[750px]">
+              
+              {/* TREE TOOLBAR */}
+              <div className="space-y-2 pb-3 border-b border-sky-100 shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <FolderIcon className="w-4 h-4 text-sky-600 shrink-0" />
+                    <span className="text-xs font-bold text-sky-900 uppercase tracking-wider">File System Capitoli</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={expandAll} className="text-[11px] font-bold text-sky-600 hover:underline">Espandi</button>
+                    <span className="text-slate-300">•</span>
+                    <button onClick={collapseAll} className="text-[11px] font-bold text-slate-500 hover:underline">Comprimi</button>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Filtra per nome o codice..."
+                    className="w-full bg-sky-50/50 border border-sky-200 rounded-md py-1.5 pl-8 pr-2.5 text-xs text-[#0b192c] focus:outline-none focus:border-sky-500 font-medium"
+                  />
+                  <span className="absolute left-2.5 top-2 text-sky-400 pointer-events-none">
+                    <SearchIcon />
+                  </span>
+                </div>
+              </div>
+
+              {/* TREE NODES (SCROLLABLE) */}
+              <div className="overflow-y-auto flex-1 pt-2 space-y-1 pr-1">
+                {CHAPTERS.map(ch => {
+                  const chItems = items.filter(it => it.chapter === ch && isItemMatch(it));
+                  if (search.trim() && chItems.length === 0) return null;
+
+                  const isExpanded = !!expandedChapters[ch];
+                  const theorems = chItems.filter(it => it.type === 'theorem');
+                  const definitions = chItems.filter(it => it.type === 'definition');
+
+                  // Count learned responses in this chapter
+                  const chLearned = chItems.reduce((acc, it) => {
+                    const st = getItemLearnedStats(it.id);
+                    return acc + st.total;
+                  }, 0);
+
+                  const isTheoExpanded = !!expandedTypes[`${ch}-theorem`];
+                  const isDefExpanded = !!expandedTypes[`${ch}-definition`];
+
+                  return (
+                    <div key={ch} className="border border-sky-100/80 rounded-md overflow-hidden text-xs">
+                      {/* CHAPTER FOLDER NODE (LEVEL 1) */}
+                      <div
+                        onClick={() => toggleChapter(ch)}
+                        className={`flex items-center justify-between px-2.5 py-2 cursor-pointer transition-colors select-none ${isExpanded ? 'bg-sky-100/70 text-sky-950 font-bold' : 'bg-sky-50/40 text-sky-900 hover:bg-sky-50 font-semibold'}`}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          {isExpanded ? <FolderOpenIcon className="w-4 h-4 text-sky-700" /> : <FolderIcon className="w-4 h-4 text-sky-600" />}
+                          <span className="font-mono font-bold text-sky-700">{ch}</span>
+                          <span className="truncate">{ch}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {chLearned > 0 && (
+                            <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold">
+                              {chLearned}
+                            </span>
+                          )}
+                          <span className="text-[10px] text-slate-400">{isExpanded ? '▼' : '▶'}</span>
+                        </div>
+                      </div>
+
+                      {/* SUB-FOLDERS: TEOREMI & DEFINIZIONI (LEVEL 2) */}
+                      {isExpanded && (
+                        <div className="pl-3 py-1 space-y-1 bg-white border-t border-sky-100">
+                          
+                          {/* TEOREMI FOLDER */}
+                          {theorems.length > 0 && (
+                            <div>
+                              <div
+                                onClick={() => toggleType(`${ch}-theorem`)}
+                                className="flex items-center justify-between px-2 py-1.5 cursor-pointer hover:bg-sky-50 rounded text-sky-900 select-none font-medium"
+                              >
+                                <div className="flex items-center gap-1.5">
+                                  {isTheoExpanded ? <FolderOpenIcon className="w-3.5 h-3.5 text-sky-700" /> : <FolderIcon className="w-3.5 h-3.5 text-sky-600" />}
+                                  <span className="font-bold">Teoremi</span>
+                                  <span className="text-[10px] text-slate-400">({theorems.length})</span>
+                                </div>
+                                <span className="text-[9px] text-slate-400">{isTheoExpanded ? '▼' : '▶'}</span>
+                              </div>
+
+                              {/* THEOREMS LIST (LEVEL 3) */}
+                              {isTheoExpanded && (
+                                <div className="pl-4 space-y-0.5 mt-0.5 border-l-2 border-sky-200 ml-3">
+                                  {theorems.map(it => {
+                                    const st = getItemLearnedStats(it.id);
+                                    const isSel = selectedItemId === it.id;
+                                    return (
+                                      <div
+                                        key={it.id}
+                                        onClick={() => setSelectedItemId(it.id)}
+                                        className={`px-2 py-1.5 rounded cursor-pointer transition-all flex items-center justify-between gap-1.5 ${isSel ? 'bg-sky-600 text-white font-bold shadow-xs' : 'hover:bg-sky-100 text-[#0b192c]'}`}
+                                      >
+                                        <div className="truncate">
+                                          <span className="truncate">{it.name}</span>
+                                        </div>
+                                        {st.total > 0 && (
+                                          <span className={`text-[9px] font-mono px-1 rounded shrink-0 ${isSel ? 'bg-sky-800 text-white' : 'bg-sky-100 text-sky-800 font-bold'}`}>
+                                            {st.accepted.length > 0 ? `+${st.accepted.length} ` : ''}{st.rejected.length > 0 ? `-${st.rejected.length}` : ''}
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* DEFINIZIONI FOLDER */}
+                          {definitions.length > 0 && (
+                            <div>
+                              <div
+                                onClick={() => toggleType(`${ch}-definition`)}
+                                className="flex items-center justify-between px-2 py-1.5 cursor-pointer hover:bg-sky-50 rounded text-sky-900 select-none font-medium"
+                              >
+                                <div className="flex items-center gap-1.5">
+                                  {isDefExpanded ? <FolderOpenIcon className="w-3.5 h-3.5 text-sky-700" /> : <FolderIcon className="w-3.5 h-3.5 text-sky-600" />}
+                                  <span className="font-bold">Definizioni</span>
+                                  <span className="text-[10px] text-slate-400">({definitions.length})</span>
+                                </div>
+                                <span className="text-[9px] text-slate-400">{isDefExpanded ? '▼' : '▶'}</span>
+                              </div>
+
+                              {/* DEFINITIONS LIST (LEVEL 3) */}
+                              {isDefExpanded && (
+                                <div className="pl-4 space-y-0.5 mt-0.5 border-l-2 border-sky-200 ml-3">
+                                  {definitions.map(it => {
+                                    const st = getItemLearnedStats(it.id);
+                                    const isSel = selectedItemId === it.id;
+                                    return (
+                                      <div
+                                        key={it.id}
+                                        onClick={() => setSelectedItemId(it.id)}
+                                        className={`px-2 py-1.5 rounded cursor-pointer transition-all flex items-center justify-between gap-1.5 ${isSel ? 'bg-sky-600 text-white font-bold shadow-xs' : 'hover:bg-sky-100 text-[#0b192c]'}`}
+                                      >
+                                        <div className="truncate">
+                                          <span className="truncate">{it.name}</span>
+                                        </div>
+                                        {st.total > 0 && (
+                                          <span className={`text-[9px] font-mono px-1 rounded shrink-0 ${isSel ? 'bg-sky-800 text-white' : 'bg-sky-100 text-sky-800 font-bold'}`}>
+                                            {st.accepted.length > 0 ? `+${st.accepted.length} ` : ''}{st.rejected.length > 0 ? `-${st.rejected.length}` : ''}
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN: DETAILS & LEARNED RESPONSES (8 cols) */}
+            <div className="lg:col-span-8 bg-white border border-sky-200 rounded-md p-6 shadow-xs flex flex-col max-h-[750px] overflow-y-auto">
+              {!selectedItem ? (
+                <div className="m-auto text-center py-16 space-y-3">
+                  <div className="w-14 h-14 mx-auto rounded-full bg-sky-50 border border-sky-200 flex items-center justify-center">
+                    <FolderIcon className="w-7 h-7 text-sky-500" />
+                  </div>
+                  <h3 className="text-base font-black text-[#0b192c]">Nessun elemento selezionato</h3>
+                  <p className="text-xs text-sky-800 max-w-md mx-auto">
+                    Clicca su un teorema o su una definizione dall'albero a sinistra per visualizzare l'enunciato ufficiale e tutte le risposte memorizzate dall'IA.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* ITEM HEADER */}
+                  <div className="border-b border-sky-100 pb-4 space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2 py-0.5 rounded bg-sky-900 text-white font-mono font-bold text-xs">
+                        {selectedItem.chapter}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-extrabold uppercase ${selectedItem.type === 'theorem' ? 'bg-sky-200 text-sky-900 border border-sky-300' : 'bg-blue-100 text-blue-900 border border-blue-200'}`}>
+                        {selectedItem.type === 'theorem' ? 'Teorema' : 'Definizione'}
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-sky-100 border border-sky-300 text-sky-900 font-mono font-bold text-xs">
+                        {selectedItem.code}
+                      </span>
+                    </div>
+
+                    <h2 className="text-xl font-black text-[#0b192c] tracking-tight">
+                      {selectedItem.name}
+                    </h2>
+
+                    {/* METRICS ROW */}
+                    <div className="flex items-center gap-4 pt-1 text-xs text-sky-800">
+                      <span>Tolleranza IA: <strong>{Math.round(selectedItemStats.threshold * 100)}%</strong></span>
+                      <span>•</span>
+                      <span>Risposte apprese: <strong className="text-emerald-700">{selectedItemStats.accepted.length} corrette</strong> / <strong className="text-rose-700">{selectedItemStats.rejected.length} errate</strong></span>
+                    </div>
+                  </div>
+
+                  {/* OFFICIAL DEFINITION / ENUNCIATO */}
+                  <div className="bg-sky-50/80 border border-sky-200 rounded-md p-4 space-y-1">
+                    <h4 className="text-xs font-bold text-sky-950 uppercase tracking-wider">
+                      {selectedItem.type === 'theorem' ? 'Enunciato Ufficiale' : 'Definizione Ufficiale'}
+                    </h4>
+                    <MathRender content={selectedItem.content} className="text-[#0b192c] text-xs leading-relaxed" />
+                  </div>
+
+                  {/* SECTION 1: ACCEPTED RESPONSES */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between border-b border-emerald-200 pb-2">
+                      <h3 className="text-xs font-extrabold text-emerald-900 uppercase tracking-wide flex items-center gap-2">
+                        <CheckCircleIcon className="w-4 h-4 text-emerald-600" />
+                        <span>Formulazioni Accettate dall'IA ({selectedItemStats.accepted.length})</span>
+                      </h3>
+                      <span className="text-[11px] text-emerald-700 font-medium">Considerate corrette durante i test</span>
+                    </div>
+
+                    {selectedItemStats.accepted.length === 0 ? (
+                      <div className="p-4 bg-emerald-50/40 border border-emerald-200 rounded-md text-xs text-emerald-800 italic text-center">
+                        Nessuna formulazione alternativa accettata ancora registrata per questo oggetto.
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {selectedItemStats.accepted.map((ans, idx) => (
+                          <div
+                            key={idx}
+                            className="bg-white border border-emerald-200 rounded-md p-3 flex items-start justify-between gap-3 shadow-2xs hover:border-emerald-300 transition-colors"
+                          >
+                            <div className="space-y-1 flex-1">
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                                Variante #{idx + 1}
+                              </span>
+                              <p className="text-xs text-[#0b192c] whitespace-pre-wrap leading-relaxed">
+                                {ans}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteResponse('accepted', ans)}
+                              title="Elimina definitivamente questa risposta"
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors text-xs font-bold shrink-0"
+                            >
+                              <TrashIcon />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* SECTION 2: REJECTED RESPONSES */}
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between border-b border-rose-200 pb-2">
+                      <h3 className="text-xs font-extrabold text-rose-900 uppercase tracking-wide flex items-center gap-2">
+                        <XCircleIcon className="w-4 h-4 text-rose-600" />
+                        <span>Formulazioni Rifiutate dall'IA ({selectedItemStats.rejected.length})</span>
+                      </h3>
+                      <span className="text-[11px] text-rose-700 font-medium">Considerate errate durante i test</span>
+                    </div>
+
+                    {selectedItemStats.rejected.length === 0 ? (
+                      <div className="p-4 bg-rose-50/40 border border-rose-200 rounded-md text-xs text-rose-800 italic text-center">
+                        Nessuna risposta rifiutata registrata per questo oggetto.
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {selectedItemStats.rejected.map((ans, idx) => (
+                          <div
+                            key={idx}
+                            className="bg-white border border-rose-200 rounded-md p-3 flex items-start justify-between gap-3 shadow-2xs hover:border-rose-300 transition-colors"
+                          >
+                            <div className="space-y-1 flex-1">
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">
+                                Errore memorizzato #{idx + 1}
+                              </span>
+                              <p className="text-xs text-[#0b192c] whitespace-pre-wrap leading-relaxed">
+                                {ans}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteResponse('rejected', ans)}
+                              title="Elimina definitivamente questa risposta"
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors text-xs font-bold shrink-0"
+                            >
+                              <TrashIcon />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
     // TEST RUNNER COMPONENT
-    function TestRunner({ mode, items, onFinish }) {
+    function TestRunner({ mode, items, onFinish, learningData: propLearningData, onSaveLearning }) {
       // ====== MATCHING MODE ======
       const [shuffledRight, setShuffledRight] = useState([]);
       const [selLeft, setSelLeft] = useState(null);
@@ -1299,15 +1927,17 @@
       const [finalScore, setFinalScore] = useState({ correct: 0, total: 0 });
 
       // ====== ML LEARNING STATE ======
-      const [learningData, setLearningData] = useState({});
-      const [learningLoaded, setLearningLoaded] = useState(false);
+      const [localLearningData, setLocalLearningData] = useState({});
+      const learningData = propLearningData || localLearningData;
+      const [learningLoaded, setLearningLoaded] = useState(!!propLearningData);
       const [autoVerdict, setAutoVerdict] = useState(null);
       const [verdictConfirmed, setVerdictConfirmed] = useState(false);
       const [mlReason, setMlReason] = useState('');
       const [mlConfidence, setMlConfidence] = useState(0);
 
-      // Load learning data from Supabase or server on mount
+      // Load learning data if not passed from parent
       useEffect(() => {
+        if (propLearningData) return;
         const loadLearning = async () => {
           const sp = getSupabaseClient();
           if (sp) {
@@ -1315,8 +1945,20 @@
               const { data, error } = await sp.from('learning').select('*');
               if (!error && Array.isArray(data) && data.length > 0) {
                 const map = {};
-                data.forEach(row => { map[row.item_id] = row; });
-                setLearningData(map);
+                data.forEach(row => {
+                  const h = row.history || {};
+                  map[row.item_id] = {
+                    score: row.score || 0,
+                    ease_factor: row.ease_factor || 2.5,
+                    interval: row.interval || 1,
+                    repetition: row.repetition || 0,
+                    accepted: Array.isArray(h.accepted) ? h.accepted : (Array.isArray(row.accepted) ? row.accepted : []),
+                    rejected: Array.isArray(h.rejected) ? h.rejected : (Array.isArray(row.rejected) ? row.rejected : []),
+                    threshold: typeof h.threshold === 'number' ? h.threshold : (typeof row.threshold === 'number' ? row.threshold : 0.75),
+                    history: Array.isArray(h.items) ? h.items : (Array.isArray(h) ? h : [])
+                  };
+                });
+                setLocalLearningData(map);
                 setLearningLoaded(true);
                 return;
               }
@@ -1325,12 +1967,12 @@
 
           fetch('/api/learning')
             .then(r => r.json())
-            .then(data => { if (data && typeof data === 'object') setLearningData(data); })
+            .then(data => { if (data && typeof data === 'object') setLocalLearningData(data); })
             .catch(() => {})
             .finally(() => setLearningLoaded(true));
         };
         loadLearning();
-      }, []);
+      }, [propLearningData]);
 
       const activeList = useMemo(() => {
         if (mode === 'write_definition' || mode === 'matching') return items.filter(i => i.type === 'definition');
@@ -1542,7 +2184,12 @@
 
       // Save learning data to server & Supabase
       const saveLearningData = async (newData) => {
-        setLearningData(newData);
+        if (onSaveLearning) {
+          onSaveLearning(newData);
+          return;
+        }
+
+        setLocalLearningData(newData);
 
         const sp = getSupabaseClient();
         if (sp && newData && typeof newData === 'object') {
@@ -1553,7 +2200,13 @@
               ease_factor: val.ease_factor || 2.5,
               interval: val.interval || 1,
               repetition: val.repetition || 0,
-              history: val.history || []
+              last_reviewed: new Date().toISOString(),
+              history: {
+                accepted: val.accepted || [],
+                rejected: val.rejected || [],
+                threshold: typeof val.threshold === 'number' ? val.threshold : 0.75,
+                items: val.history || []
+              }
             }));
             if (rows.length > 0) {
               await sp.from('learning').upsert(rows);

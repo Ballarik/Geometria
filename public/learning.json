@@ -1,0 +1,23 @@
+{
+  "custom-1786715077448": {
+    "accepted": [
+      "in un triangolo rettangolo il quadrato costruito sullipotenusa è equivalente alla somma dei quadrati costruiti sui cateti"
+    ],
+    "rejected": [],
+    "threshold": 0.75
+  },
+  "custom-1786715077451": {
+    "accepted": [
+      "se in un triangolo il quadrato costruito su un lato è equivalente alla somma dei quadrati costruiti sugli altri due lati allora il triangolo è rettangolo"
+    ],
+    "rejected": [],
+    "threshold": 0.75
+  },
+  "custom-1786714986193": {
+    "accepted": [
+      "in ogni triangolo rettangolo il quadrato costruito su un cateto è equivalente al rettangolo che ha i lati congruenti allipotenusa e alla proiezione dello stesso cateto sullipotenusa"
+    ],
+    "rejected": [],
+    "threshold": 0.75
+  }
+}
